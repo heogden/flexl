@@ -36,7 +36,7 @@ fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
     }
     
     #' optimize loglikelihood for alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
-    opt_out <- optim(rep(0, nbasis - k + 1), find_pen_loglikelihood_k,
+    opt_out <- optim(rep(0.1, nbasis - k + 1), find_pen_loglikelihood_k,
                      X_k = X_k, S_k = S_k, fit_km1 = fit_km1,
                      method = "BFGS", control = list(fnscale = -1))
 
@@ -58,14 +58,19 @@ fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
 #' Fit the mean-only mode, and set up for use in future fits
 fit_0 <- function(data, sp, sigma, basis) {
     X_0 <- basis$X
-    mod_0 <- lm.fit(X_0, data$y)
+    
+    Xt_y <- crossprod(X_0, data$y)
+    XtX <- crossprod(X_0, X_0)
+    
+    beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
+    y_hat_0 <- X_0 %*% beta_0
 
     clusters <- unique(data$c)
     cluster_info <- lapply(clusters, init_cluster_info, data = data, sigma = sigma,
-                           z = mod_0$residuals)
+                           z = data$y - y_hat_0)
     
     list(k = 0,
-         beta_0 = mod_0$coefficients,
+         beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
          cluster_info = cluster_info)
 }

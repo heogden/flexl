@@ -31,6 +31,39 @@ test_that("can fit normal model with fixed k and penalty pars", {
 
     data <- data.frame(c = c, x = x, y = y)
 
-    mod <- fit_given_sp(data, 10, 1, 1, 10)
+    sp <- 1000
+    sigma <- 1
+
+    mod <- fit_given_sp(data, sp, sigma, 1, 10)
+
+    
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
+    fits <- list()
+    #' fit the mean-only model (k = 0)
+    fits[[1]] <- fit_0(data, sp, sigma, basis)
+    fits[[2]] <- fit_given_k(data, sp, sigma, 1, fits[[1]], basis)
+
+    fits[[2]]$beta
+
+    f_0_fitted <- basis$X %*% fits[[2]]$beta_0
+    f_1_fitted <- basis$X %*% fits[[2]]$beta
+
+    plot(data$x, data$y)
+    points(data$x, f_0_fitted, col = 2)
+    curve(mu, add = TRUE, lty = 2)
+
+    #' fit reasonable (overfitting decreases with sp)
+    
+    plot(data$x, f_1_fitted)
+
+    k <- 2
+    fit_km1 <- fits[[2]]
+    
+    nbasis <- nrow(basis$S)
+    transform <- find_orthogonal_complement_transform(fit_km1$beta)
+            
+    #' pre-compute "transformed" spline basis:
+    X_k <- basis$X %*% transform
+    S_k <- basis$S %*% transform
     
 })
