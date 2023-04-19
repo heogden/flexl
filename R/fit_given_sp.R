@@ -27,7 +27,7 @@ fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
             
         #' pre-compute "transformed" spline basis:
         X_k <- basis$X %*% transform
-        S_k <- basis$S %*% transform
+        S_k <- emulator::quad.form(basis$S, transform)
         
     } else {
         #' no restrictions needed on beta_1
@@ -37,7 +37,7 @@ fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
     
     #' optimize loglikelihood for alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
     opt_out <- optim(rep(0.1, nbasis - k + 1), find_pen_loglikelihood_k,
-                     X_k = X_k, S_k = S_k, fit_km1 = fit_km1,
+                     sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1,
                      method = "BFGS", control = list(fnscale = -1))
 
     alpha_k <- opt_out$par

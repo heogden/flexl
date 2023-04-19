@@ -25,7 +25,7 @@ find_info_k <- function(a, info_km1) {
     Sigma_inv_z <- as.numeric(Sigma_inv %*% z)
     tz_Sigma_inv_z <- sum(z * Sigma_inv_z)
     list(cluster = info_km1$cluster, rows = info_km1$rows,
-         Sigma_inf = Sigma_inv, ldet_Sigma = ldet_Sigma,
+         Sigma_inv = Sigma_inv, ldet_Sigma = ldet_Sigma,
          z = z, Sigma_inv_z = Sigma_inv_z, tz_Sigma_inv_z = tz_Sigma_inv_z)
     
 }
@@ -34,7 +34,7 @@ find_info_k <- function(a, info_km1) {
 find_loglikelihood_k <- function(alpha_k, X_k, fit_km1) {
     f_k <- as.numeric(X_k %*% alpha_k)
     l_comp <- c()
-    for(c in seq_along(fit_km1)) {
+    for(c in seq_along(fit_km1$cluster_info)) {
         info_km1_c <- fit_km1$cluster_info[[c]]
         l_comp[c] <- ldmvnorm(f_k[info_km1_c$rows], info_km1_c)
     }
@@ -45,6 +45,6 @@ find_wiggliness_f_k <- function(alpha_k, S_k) {
     emulator::quad.form(S_k, alpha_k)
 }
 
-find_pen_loglikelihood_k <- function(alpha_k, X_k, S_k, fit_km1) {
-    find_loglikelihood_k(alpha_k, X_k, fit_km1) - find_wiggliness_f_k(alpha_k, S_k)
+find_pen_loglikelihood_k <- function(alpha_k, sp, X_k, S_k, fit_km1) {
+    find_loglikelihood_k(alpha_k, X_k, fit_km1) - sp * find_wiggliness_f_k(alpha_k, S_k)
 }

@@ -25,45 +25,53 @@ test_that("can fit normal model with fixed k and penalty pars", {
     K <- length(lambda)
     alpha <- as.numeric(t(sapply(lambda, function(lambda_i){rnorm(d, sd = sqrt(lambda_i))})))
     eta <-  m + as.numeric(Z %*% alpha)
-    
+
     sigma <- 0.1
     y <- eta + rnorm(n, sd = sigma)
 
     data <- data.frame(c = c, x = x, y = y)
 
-    sp <- 1000
-    sigma <- 1
-
-    mod <- fit_given_sp(data, sp, sigma, 1, 10)
-
     
+    sp <- 1000000
+    sigma <- 0.1
+
+    mod <- fit_given_sp(data, sp, sigma, 2, 10)
+
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
-    fits <- list()
-    #' fit the mean-only model (k = 0)
-    fits[[1]] <- fit_0(data, sp, sigma, basis)
-    fits[[2]] <- fit_given_k(data, sp, sigma, 1, fits[[1]], basis)
 
-    fits[[2]]$beta
-
-    f_0_fitted <- basis$X %*% fits[[2]]$beta_0
-    f_1_fitted <- basis$X %*% fits[[2]]$beta
+    f_0_fitted <- basis$X %*% mod[[3]]$beta_0
+    f_1_fitted <- basis$X %*% mod[[3]]$beta[,1]
+    f_2_fitted <- basis$X %*% mod[[3]]$beta[,2]
 
     plot(data$x, data$y)
     points(data$x, f_0_fitted, col = 2)
     curve(mu, add = TRUE, lty = 2)
 
     #' fit reasonable (overfitting decreases with sp)
+
+    x_grid <- seq(0, 1, length.out = 100)
     
     plot(data$x, f_1_fitted)
+    lines(x_grid, 0.7 * delta(x_grid)[,1], lty = 2)
 
-    k <- 2
-    fit_km1 <- fits[[2]]
-    
-    nbasis <- nrow(basis$S)
-    transform <- find_orthogonal_complement_transform(fit_km1$beta)
-            
-    #' pre-compute "transformed" spline basis:
-    X_k <- basis$X %*% transform
-    S_k <- basis$S %*% transform
+    plot(data$x, f_2_fitted)
+    lines(x_grid, 0.3 * delta(x_grid)[,2], lwd = 5, lty = 2, col = 2)
+
+    #' constants not that important, but unsure why they take these values
+    sqrt(0.5)/sqrt(0.1)
+    #' is close to:
+    0.68/0.3
+
+    f_1_fun <- splinefun(data$x, f_1_fitted)
+    f_2_fun <- splinefun(data$x, f_2_fitted)
+
+    mean(f_1_fun(x_grid) * f_2_fun(x_grid))
+    #' fairly close to zero: orthogonality is (approx) observed
+
+    mean(delta(x_grid)[,1] * delta(x_grid)[,2])
+
+    #' fitting is sensitive to choice of sigma
+    #' here I have specified the correct value: but don't know
+    #' this in practice!
     
 })
