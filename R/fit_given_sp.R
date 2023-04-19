@@ -4,7 +4,7 @@
 #' @param nbasis the number of spline basis functions to use
 fit_given_sp <- function(data, sp, sigma, kmax, nbasis) {
     #' find the basis to use
-    basis <- find_orthogonal_spline_basis(nbasis, data)
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
     fits <- list()
     #' fit the mean-only model (k = 0)
@@ -26,12 +26,12 @@ fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
         transform <- find_orthogonal_complement_tranform(beta_lk)
             
         #' pre-compute "transformed" spline basis:
-        X_k <- basis$design %*% transform
+        X_k <- basis$X %*% transform
         S <- basis$S %*% transform
         
     } else {
         #' no restrictions needed on beta_1
-        X_k <- basis$design
+        X_k <- basis$X
         S <- basis$S
     }
     
