@@ -21,7 +21,7 @@ find_info_k <- function(a, info_km1) {
     c <- 1 + sum(a * b)
     ldet_Sigma <- log(c) + info_km1$ldet_Sigma
     Sigma_inv <- info_km1$Sigma_inv - tcrossprod(b, b) / c
-    z <- imfo_km1$z
+    z <- info_km1$z
     Sigma_inv_z <- as.numeric(Sigma_inv %*% z)
     tz_Sigma_inv_z <- sum(z * Sigma_inv_z)
     list(cluster = info_km1$cluster, rows = info_km1$rows,
@@ -32,11 +32,11 @@ find_info_k <- function(a, info_km1) {
 
 
 find_loglikelihood_k <- function(alpha_k, X_k, fit_km1) {
-    f_k <- X_k %*% alpha_k
+    f_k <- as.numeric(X_k %*% alpha_k)
     l_comp <- c()
     for(c in seq_along(fit_km1)) {
-        fit_km1_c <- fit_km1[[c]]
-        l_comp[c] <- ldmvnorm(f_k[fit_km1_c$rows], fit_km1_c)
+        info_km1_c <- fit_km1$cluster_info[[c]]
+        l_comp[c] <- ldmvnorm(f_k[info_km1_c$rows], info_km1_c)
     }
     sum(l_comp)
 }

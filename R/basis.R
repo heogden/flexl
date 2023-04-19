@@ -3,6 +3,6 @@ find_orthogonal_spline_basis <- function(nbasis, x) {
     knots <- orthogonalsplinebasis::expand.knots(interior_knots)
     basis <- orthogonalsplinebasis::OrthogonalSplineBasis(knots)
     list(X = orthogonalsplinebasis::evaluate(basis, x = x),
-         S = orthogonalsplinebasis::OuterProdSecondDerivative(basis$osb),
+         S = orthogonalsplinebasis::OuterProdSecondDerivative(basis),
          basis = basis)
 }
