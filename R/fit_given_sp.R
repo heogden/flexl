@@ -21,9 +21,8 @@ fit_given_sp <- function(data, sp, sigma, kmax, nbasis) {
 #' @param k the number of variation functions to use 
 fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
     if(k > 1) {
-        beta_lk <- fit_km1$beta
-        #' find basis for orthogonal complement of beta_1, ..., beta_km1
-        transform <- find_orthogonal_complement_tranform(beta_lk)
+        #' find basis for orthogonal complement of beta_1, ..., beta_{k-1}
+        transform <- find_orthogonal_complement_tranform(fit_km1$beta)
             
         #' pre-compute "transformed" spline basis:
         X_k <- basis$X %*% transform
