@@ -32,16 +32,18 @@ test_that("can fit normal model with fixed k and penalty pars", {
     data <- data.frame(c = c, x = x, y = y)
 
     
-    sp <- 1000000
+    sp <- 100000
     sigma <- 0.1
 
-    mod <- fit_given_sp(data, sp, sigma, 2, 10)
+    mod <- fit_given_sp(data, sp, sigma, 3, 10)
 
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
-    f_0_fitted <- basis$X %*% mod[[3]]$beta_0
-    f_1_fitted <- basis$X %*% mod[[3]]$beta[,1]
-    f_2_fitted <- basis$X %*% mod[[3]]$beta[,2]
+    f_0_fitted <- basis$X %*% mod[[4]]$beta_0
+    f_1_fitted <- basis$X %*% mod[[4]]$beta[,1]
+    f_2_fitted <- basis$X %*% mod[[4]]$beta[,2]
+    f_3_fitted <- basis$X %*% mod[[4]]$beta[,3]
+    sqrt(mean(f_3_fitted^2)) #' very small: so should stop at k = 2
 
     plot(data$x, data$y)
     points(data$x, f_0_fitted, col = 2)
@@ -56,6 +58,7 @@ test_that("can fit normal model with fixed k and penalty pars", {
 
     plot(data$x, f_2_fitted)
     lines(x_grid, 0.3 * delta(x_grid)[,2], lwd = 5, lty = 2, col = 2)
+
 
     #' constants not that important, but unsure why they take these values
     sqrt(0.5)/sqrt(0.1)
