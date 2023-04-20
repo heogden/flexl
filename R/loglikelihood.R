@@ -45,6 +45,6 @@ find_wiggliness_f_k <- function(alpha_k, S_k) {
     emulator::quad.form(S_k, alpha_k)
 }
 
-find_pen_loglikelihood_k <- function(alpha_k, sp, X_k, S_k, fit_km1) {
-    find_loglikelihood_k(alpha_k, X_k, fit_km1) - sp * find_wiggliness_f_k(alpha_k, S_k)
+find_pen_loglikelihood_k <- function(alpha_k, sp, sigma, X_k, S_k, fit_km1) {
+    find_loglikelihood_k(alpha_k, X_k, fit_km1) - sp / sigma^2 * find_wiggliness_f_k(alpha_k, S_k)
 }

@@ -32,10 +32,11 @@ test_that("can fit normal model with fixed k and penalty pars", {
     data <- data.frame(c = c, x = x, y = y)
 
     
-    sp <- 100000
+    sp <- 10000
     sigma <- 0.1
+    nbasis <- 10
 
-    mod <- fit_given_sp(data, sp, sigma, 3, 10)
+    mod <- fit_given_sp(data, sp, sigma, 3, nbasis)
 
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
@@ -54,16 +55,11 @@ test_that("can fit normal model with fixed k and penalty pars", {
     x_grid <- seq(0, 1, length.out = 100)
     
     plot(data$x, f_1_fitted)
-    lines(x_grid, 0.7 * delta(x_grid)[,1], lty = 2)
+    lines(x_grid, sqrt(0.5) * delta(x_grid)[,1], lty = 2)
 
     plot(data$x, f_2_fitted)
-    lines(x_grid, 0.3 * delta(x_grid)[,2], lwd = 5, lty = 2, col = 2)
+    lines(x_grid, sqrt(0.1) * delta(x_grid)[,2], lwd = 5, lty = 2, col = 2)
 
-
-    #' constants not that important, but unsure why they take these values
-    sqrt(0.5)/sqrt(0.1)
-    #' is close to:
-    0.68/0.3
 
     f_1_fun <- splinefun(data$x, f_1_fitted)
     f_2_fun <- splinefun(data$x, f_2_fitted)
@@ -73,8 +69,9 @@ test_that("can fit normal model with fixed k and penalty pars", {
 
     mean(delta(x_grid)[,1] * delta(x_grid)[,2])
 
-    #' fitting is sensitive to choice of sigma
-    #' here I have specified the correct value: but don't know
-    #' this in practice!
+    #' size of f_j functions are sensitive to choice of sigma
+
+    mean(f_1_fun(x_grid)^2) #' close to 0.5 if we choose sigma = 0.1 (correct)
+    mean(f_2_fun(x_grid)^2) #' close to 0.1 if sigma = 0.1
     
 })
