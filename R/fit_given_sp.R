@@ -2,23 +2,23 @@
 #' @param sigma the standard deviation of the normal errors
 #' @param kmax the maximum number of variation functions to use
 #' @param nbasis the number of spline basis functions to use
-fit_given_sp <- function(data, sp, sigma, kmax, nbasis) {
+fit_given_sp <- function(data, sp, kmax, nbasis) {
     #' find the basis to use
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
     fits <- list()
     #' fit the mean-only model (k = 0)
-    fits[[1]] <- fit_0(data, sp, sigma, basis)
+    fits[[1]] <- fit_0(data, sp, basis)
     
     #' fit with k variation functions, fixing mean and first k-1 functions
     for(k in 1:kmax) {
-        fits[[k+1]] <- fit_given_k(data, sp, sigma, k, fits[[k]], basis)
+        fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis)
         #' stop early if f_j very close to 0
     }
     fits
 }
 
 #' @param k the number of variation functions to use 
-fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
+fit_given_k <- function(data, sp, k, fit_km1, basis) {
     nbasis <- nrow(basis$S)
     
     if(k > 1) {
@@ -35,28 +35,24 @@ fit_given_k <- function(data, sp, sigma, k, fit_km1, basis) {
         S_k <- basis$S
     }
     
-    #' optimize loglikelihood for alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
-    opt_out <- optim(rep(0.1, nbasis - k + 1), find_pen_loglikelihood_k,
-                     sp = sp, sigma = sigma, X_k = X_k, S_k = S_k, fit_km1 = fit_km1,
-                     method = "BFGS", control = list(fnscale = -1))
+    #' optimize loglikelihood for sigma and alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
+    fit <- optimize_sigma_k(sp, X_k, S_k, fit_km1)
 
-    alpha_k <- opt_out$par
-    f_k <- X_k %*% alpha_k
-    cluster_info <- lapply(fit_km1$cluster_info, update_cluster_info, f_k = f_k)
-
+    alpha_k <- fit$alpha_k
+    
     if(k > 1) {
         beta_k <- transform %*% alpha_k
     } else {
         beta_k <- alpha_k
     }
     
-    beta <- cbind(fit_km1$beta, beta_k)
-    
-    list(beta_0 = fit_km1$beta_0, beta = beta, cluster_info = cluster_info)
+    fit$beta <- cbind(fit_km1$beta, beta_k)
+
+    fit
 }
 
 #' Fit the mean-only mode, and set up for use in future fits
-fit_0 <- function(data, sp, sigma, basis) {
+fit_0 <- function(data, sp, basis) {
     X_0 <- basis$X
     
     Xt_y <- crossprod(X_0, data$y)
@@ -64,14 +60,17 @@ fit_0 <- function(data, sp, sigma, basis) {
     
     beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
     y_hat_0 <- X_0 %*% beta_0
+    resid <- data$y - y_hat_0
+    sigma <- sd(resid)
 
     clusters <- unique(data$c)
     cluster_info <- lapply(clusters, init_cluster_info, data = data, sigma = sigma,
-                           z = data$y - y_hat_0)
+                           z = resid)
     
     list(k = 0,
          beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
+         sigma = sigma,
          cluster_info = cluster_info)
 }
 
@@ -94,5 +93,32 @@ update_cluster_info <- function(cluster_info_km1, f_k) {
     find_info_k(a, cluster_info_km1)
 }
 
+update_fit_sigma <- function(fit_prev, sigma) {
+    s2_diff <- sigma^2 - fit_prev$sigma^2
+    cat("update_fit_sigma, sigma_prev =", fit_prev$sigma, "sigma =", sigma, "\n")
+
+    fit_prev$sigma <- sigma
+    fit_prev$cluster_info <- lapply(fit_prev$cluster_info, update_cluster_info_sigma,
+                                    s2_diff = s2_diff)
+    fit_prev
+}
+
+
+update_cluster_info_sigma <- function(cluster_info_prev, s2_diff) {
+    Sigma_prev <- solve(cluster_info_prev$Sigma_inv)
+    Sigma <- Sigma_prev + diag(s2_diff, nrow = nrow(Sigma_prev), ncol = ncol(Sigma_prev))
+    
+    Sigma_inv <- solve(Sigma)
+    ldet_Sigma <- determinant(Sigma)$modulus
+    
+    z <- cluster_info_prev$z
+    Sigma_inv_z <- as.numeric(Sigma_inv %*% z)
+    tz_Sigma_inv_z <- emulator::quad.form(Sigma_inv, z)
+    
+    list(cluster = cluster_info_prev$cluster, rows = cluster_info_prev$rows,
+         Sigma_inv = Sigma_inv, ldet_Sigma = ldet_Sigma, z = z, Sigma_inv_z = Sigma_inv_z,
+         tz_Sigma_inv_z = tz_Sigma_inv_z)
+    
+}
 
 

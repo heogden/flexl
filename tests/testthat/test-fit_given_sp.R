@@ -36,7 +36,7 @@ test_that("can fit normal model with fixed k and penalty pars", {
     sigma <- 0.1
     nbasis <- 10
 
-    mod <- fit_given_sp(data, sp, sigma, 3, nbasis)
+    mod <- fit_given_sp(data, sp, 3, nbasis)
 
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
@@ -71,7 +71,16 @@ test_that("can fit normal model with fixed k and penalty pars", {
 
     #' size of f_j functions are sensitive to choice of sigma
 
-    mean(f_1_fun(x_grid)^2) #' close to 0.5 if we choose sigma = 0.1 (correct)
-    mean(f_2_fun(x_grid)^2) #' close to 0.1 if sigma = 0.1
+    mean(f_1_fun(x_grid)^2) #' close to 0.5 
+    mean(f_2_fun(x_grid)^2) #' close to 0.1
+
+    sigmas <- sapply(mod, "[[", "sigma")
+    
+    #' could translate to fraction of "non-residual" variance explained?
+    resid_var <- min(sigmas^2)
+    non_resid_var <- sigmas^2 - resid_var
+    1 - non_resid_var / non_resid_var[1]
+
+    #' could use some cut off in FVE (e.g. 0.99) to select k
     
 })
