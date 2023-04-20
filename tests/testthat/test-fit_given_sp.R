@@ -32,7 +32,7 @@ test_that("can fit normal model with fixed k and penalty pars", {
     data <- data.frame(c = c, x = x, y = y)
 
     
-    sp <- 10000
+    sp <- 1000
     sigma <- 0.1
     nbasis <- 10
 

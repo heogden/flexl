@@ -95,7 +95,6 @@ update_cluster_info <- function(cluster_info_km1, f_k) {
 
 update_fit_sigma <- function(fit_prev, sigma) {
     s2_diff <- sigma^2 - fit_prev$sigma^2
-    cat("update_fit_sigma, sigma_prev =", fit_prev$sigma, "sigma =", sigma, "\n")
 
     fit_prev$sigma <- sigma
     fit_prev$cluster_info <- lapply(fit_prev$cluster_info, update_cluster_info_sigma,

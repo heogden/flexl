@@ -24,9 +24,8 @@ optimize_sigma_k <- function(sp, X_k, S_k, fit_km1) {
     storage <- list()
 
     counter <- 1
-    lpen_prof_sigma <- function(lsigma) {
+    lpen_prof_sigma <- function(sigma) {
         result <- tryCatch({
-            sigma <- exp(lsigma)
             opt_out <- optimize_alpha_k_given_sigma(sigma, sp, X_k, S_k, fit_km1, storage)
             storage[[counter]] <<- opt_out
             counter <<- counter + 1
@@ -35,7 +34,8 @@ optimize_sigma_k <- function(sp, X_k, S_k, fit_km1) {
         result
     }
     
-    opt_out_lsigma <- optim(log(fit_km1$sigma), lpen_prof_sigma, method = "BFGS",
+    opt_out_lsigma <- optim(fit_km1$sigma, lpen_prof_sigma, method = "L-BFGS-B",
+                            lower = 1e-6, upper = fit_km1$sigma,
                             control = list(fnscale = -1))
 
     opt_out <- storage[[which.max(sapply(storage, "[[", "value"))]]
