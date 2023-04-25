@@ -50,5 +50,9 @@ optimize_sigma_k <- function(sp, X_k, S_k, fit_km1) {
     fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
     fit$alpha_k <- alpha_k
 
+    fit$f_x <- cbind(fit$f_x, f_k)
+    fit$u <- find_u_hat(sigma_hat, data, fit$f0_x, fit$f_x)
+
+
     fit
 }

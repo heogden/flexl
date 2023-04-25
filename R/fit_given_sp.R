@@ -47,9 +47,11 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
     }
     
     fit$beta <- cbind(fit_km1$beta, beta_k)
-
+    fit$f = find_spline_fun(fit$beta, basis)
+    
     fit
 }
+
 
 #' Fit the mean-only mode, and set up for use in future fits
 fit_0 <- function(data, sp, basis) {
@@ -71,6 +73,11 @@ fit_0 <- function(data, sp, basis) {
          beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
          sigma = sigma,
+         u = matrix(nrow = length(unique(clusters)), ncol = 0),
+         f0_x = y_hat_0,
+         f0 = find_spline_fun(beta_0, basis),
+         f_x = matrix(nrow = length(y_hat_0), ncol = 0),
+         f = function(x){ matrix(nrow = length(x), ncol = 0) },
          cluster_info = cluster_info)
 }
 
