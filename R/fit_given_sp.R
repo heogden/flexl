@@ -36,7 +36,7 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
     }
     
     #' optimize loglikelihood for sigma and alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
-    fit <- optimize_sigma_k(sp, X_k, S_k, fit_km1)
+    fit <- optimize_sigma_k(sp, X_k, S_k, fit_km1, data)
 
     alpha_k <- fit$alpha_k
     

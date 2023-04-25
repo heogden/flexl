@@ -29,24 +29,16 @@ test_that("can fit normal model with fixed k and penalty pars", {
     sigma <- 0.1
     y <- eta + rnorm(n, sd = sigma)
 
-    data <- data.frame(c = c, x = x, y = y)
+    data1 <- data.frame(c = c, x = x, y = y)
 
     
     sp <- 1000
     sigma <- 0.1
     nbasis <- 10
 
-    mod <- fit_given_sp(data, sp, 3, nbasis)
+    mod <- fit_given_sp(data1, sp, 3, nbasis)
 
-    basis <- find_orthogonal_spline_basis(nbasis, data$x)
-
-    f_0_fitted <- basis$X %*% mod[[4]]$beta_0
-    f_1_fitted <- basis$X %*% mod[[4]]$beta[,1]
-    f_2_fitted <- basis$X %*% mod[[4]]$beta[,2]
-    f_3_fitted <- basis$X %*% mod[[4]]$beta[,3]
-    sqrt(mean(f_3_fitted^2)) #' very small: so should stop at k = 2
-
-    plot(data$x, data$y)
+    plot(data1$x, data1$y)
     curve(mod[[1]]$f0(x), col = 2, add = TRUE, lwd = 2)
     curve(mu, add = TRUE, lty = 2)
 
@@ -73,7 +65,7 @@ test_that("can fit normal model with fixed k and penalty pars", {
 
     predict_flexl(mod[[3]]
     
-    pred_data <- bind_cols(x = data$x, c = data$c, eta = eta) %>%
+    pred_data <- bind_cols(x = data1$x, c = data1$c, eta = eta) %>%
         group_by(c) %>%
         mutate(eta_hat_0 = predict_flexl(mod[[1]], newdata = list(x = x, c = c[1])),
                eta_hat_1 = predict_flexl(mod[[2]], newdata = list(x = x, c = c[1])),

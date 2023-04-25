@@ -20,7 +20,7 @@ optimize_alpha_k_given_sigma <- function(sigma, sp, X_k, S_k, fit_km1, storage) 
 }
 
 
-optimize_sigma_k <- function(sp, X_k, S_k, fit_km1) {
+optimize_sigma_k <- function(sp, X_k, S_k, fit_km1, data) {
     storage <- list()
 
     counter <- 1
