@@ -17,25 +17,25 @@ ldmvnorm <- function(a, info_km1) {
 }
 
 #' Derivative of log(|Sigma_k|) with respect to a
-log_det_Sigma_grad <- function(a, info_km1) {
-    ta_Sigma_inv <- as.numeric(crossprod(a, info_km1$Sigma_inv))
-    ta_Sigma_inv_a <- sum(a * ta_Sigma_inv)
-    2 * ta_Sigma_inv / (1 + ta_Sigma_inv_a)
+#' (computed above as const + log c)
+log_det_Sigma_grad <- function(c, dc) {
+    dc / c
 }
 
 #' Derivative of z^T (Sigma_k)^{-1} z with respect to a
-#' (computed above as const - d^2 / c
-quad_form_grad <- function(a, info_km1) {
-    #' remove replication of quantities already computed if possible
+#' (computed above as const - d^2 / c)
+quad_form_grad <- function(c, d, dc, dd) {    
+    - 2 * d * dd / c + d^2 * dc / c^2
+}
+
+#' could do this at the same time as computing values
+#' and avoid recomputing quantities
+ldmvnorm_grad <- function(a, info_km1) {
     b <- as.numeric(info_km1$Sigma_inv %*% a)
     c <- 1 + sum(a * b)
     dc <- 2 * b
     d <- sum(info_km1$Sigma_inv_z * a)
     dd <- as.numeric(info_km1$Sigma_inv_z)
 
-    - 2 * d * dd / c + d^2 * dc / c^2
-}
-
-ldmvnorm_grad <- function(a, info_km1) {
-    - 0.5 *(log_det_Sigma_grad(a, info_km1) + quad_form_grad(a, info_km1))
+    - 0.5 *(log_det_Sigma_grad(c, dc) + quad_form_grad(c, d, dc, dd))
 }
