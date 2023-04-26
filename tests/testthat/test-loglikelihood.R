@@ -1,7 +1,7 @@
 test_that("derivatives of loglikelihood are correct", {
     data <- generate_test_data_1()
     
-    nbasis <- 10
+    nbasis <- 5
     sp <- 100
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
     
@@ -23,4 +23,10 @@ test_that("derivatives of loglikelihood are correct", {
     loglikelihood_grad_auto <- loglikelihood_k_grad(alpha_k, X_k, fit_km1)
 
     expect_equal(loglikelihood_grad_auto, loglikelihood_grad_man)
+
+    loglikelihood_hess_man <-  numDeriv::hessian(find_loglikelihood_k, alpha_k,
+                                                 X_k = X_k, fit_km1 = fit_km1)
+    loglikelihood_hess_auto <- loglikelihood_k_hess(alpha_k, X_k, fit_km1)
+
+    expect_equal(loglikelihood_hess_auto, loglikelihood_hess_man)
 })

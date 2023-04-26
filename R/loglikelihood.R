@@ -41,3 +41,16 @@ loglikelihood_k_grad <- function(alpha_k, X_k, fit_km1) {
     }
     rowSums(dl_comp)
 }
+
+loglikelihood_k_hess <- function(alpha_k, X_k, fit_km1) {
+    f_k <- as.numeric(X_k %*% alpha_k)
+    nc <- length(fit_km1$cluster_info)
+    d2l_comp <- array(NA, dim = c(length(alpha_k), length(alpha_k), nc))
+    for(c in seq_along(fit_km1$cluster_info)) {
+        info_km1_c <- fit_km1$cluster_info[[c]]
+        X_kc <- X_k[info_km1_c$rows, , drop = FALSE]
+        d2l_comp[ , , c] <- emulator::quad.form(ldmvnorm_hess(f_k[info_km1_c$rows], info_km1_c), X_kc)
+    }
+    rowSums(d2l_comp, dims = 2)
+}
+
