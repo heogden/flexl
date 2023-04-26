@@ -5,15 +5,27 @@
 #' for each new value of a.
 #' Here info_km1 contains values needed corresponding to Sigma_km1 and z
 ldmvnorm <- function(a, info_km1) {
-    b <- info_km1$Sigma_inv %*% a
+    b <- as.numeric(info_km1$Sigma_inv %*% a)
+    
     c <- 1 + sum(a * b)
+    dc <- 2 * b
+    d2c <- 2 * info_km1$Sigma_inv
+
     ldet_Sigma <- log(c) + info_km1$ldet_Sigma
+    
+    
     d <- sum(info_km1$Sigma_inv_z * a)
+    dd <- as.numeric(info_km1$Sigma_inv_z)
 
     n <- length(info_km1$z)
 
     quad_form <- info_km1$tz_Sigma_inv_z - d^2/c
-    -n/2 * log(2*pi) - 1/2 * ldet_Sigma - 1/2 * quad_form
+
+    res <- -n/2 * log(2*pi) - 1/2 * (ldet_Sigma + quad_form)
+    attr(res, "gradient") <- -1/2 * (log_det_Sigma_grad(c, dc) + quad_form_grad(c, dc, d, dd))
+    attr(res, "hessian") <- -1/2 * (log_det_Sigma_hess(c, dc, d2c) + quad_form_hess(c, dc, d2c, d, dd))
+
+    res
 }
 
 #' Derivative of log(|Sigma_k|) with respect to a
@@ -28,17 +40,6 @@ quad_form_grad <- function(c, dc, d, dd) {
     - 2 * d * dd / c + d^2 * dc / c^2
 }
 
-#' could do this at the same time as computing values
-#' and avoid recomputing quantities
-ldmvnorm_grad <- function(a, info_km1) {
-    b <- as.numeric(info_km1$Sigma_inv %*% a)
-    c <- 1 + sum(a * b)
-    dc <- 2 * b
-    d <- sum(info_km1$Sigma_inv_z * a)
-    dd <- as.numeric(info_km1$Sigma_inv_z)
-
-    - 0.5 * (log_det_Sigma_grad(c, dc) + quad_form_grad(c, dc, d, dd))
-}
 
 log_det_Sigma_hess <- function(c, dc, d2c) {
     d2c / c - tcrossprod(dc / c)
@@ -54,16 +55,3 @@ quad_form_hess <- function(c, dc, d2c, d, dd) {
     t1 + t2 + t3 + t4 + t5
 }
 
-
-ldmvnorm_hess <- function(a, info_km1) {
-    b <- as.numeric(info_km1$Sigma_inv %*% a)
-    
-    c <- 1 + sum(a * b)
-    dc <- 2 * b
-    d2c <- 2 * info_km1$Sigma_inv
-    
-    d <- sum(info_km1$Sigma_inv_z * a)
-    dd <- as.numeric(info_km1$Sigma_inv_z)
-
-    -0.5 * (log_det_Sigma_hess(c, dc, d2c) + quad_form_hess(c, dc, d2c, d, dd))
-}

@@ -18,25 +18,15 @@ test_that("derivatives of loglikelihood are correct", {
     set.seed(1)
     alpha_k <- rnorm(ncol(X_k))
 
-    loglikelihood_grad_man <- numDeriv::grad(find_loglikelihood_k, alpha_k,
-                                             X_k = X_k, fit_km1 = fit_km1)
-    loglikelihood_grad_auto <- loglikelihood_k_grad(alpha_k, X_k, fit_km1)
-
-    expect_equal(loglikelihood_grad_auto, loglikelihood_grad_man)
-
-    loglikelihood_hess_man <-  numDeriv::hessian(find_loglikelihood_k, alpha_k,
-                                                 X_k = X_k, fit_km1 = fit_km1)
-    loglikelihood_hess_auto <- loglikelihood_k_hess(alpha_k, X_k, fit_km1)
-
-    expect_equal(loglikelihood_hess_auto, loglikelihood_hess_man)
-
+    pen_loglikelihood <- find_pen_loglikelihood_k(alpha_k, sp, X_k, S_k, fit_km1)
+    
     pen_loglikelihood_grad_man <- numDeriv::grad(find_pen_loglikelihood_k, alpha_k,
                                                  sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1)
-    pen_loglikelihood_grad_auto <- pen_loglikelihood_k_grad(alpha_k, sp, X_k, S_k, fit_km1)
+    pen_loglikelihood_grad_auto <- attr(pen_loglikelihood, "gradient")
     expect_equal(pen_loglikelihood_grad_auto, pen_loglikelihood_grad_man)
 
     pen_loglikelihood_hess_man <- numDeriv::hessian(find_pen_loglikelihood_k, alpha_k,
                                                     sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1)
-    pen_loglikelihood_hess_auto <- pen_loglikelihood_k_hess(alpha_k, sp, X_k, S_k, fit_km1)
+    pen_loglikelihood_hess_auto <- attr(pen_loglikelihood, "hessian")
     expect_equal(pen_loglikelihood_hess_auto, pen_loglikelihood_hess_man)
 })
