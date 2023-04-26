@@ -34,6 +34,6 @@ test_that("ldmvnorm and derivatives work", {
 
     expect_equal(ld_hess_auto, ld_hess_man, tolerance = 1e-4)
  
-
+    
 
 })

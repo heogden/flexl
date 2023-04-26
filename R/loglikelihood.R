@@ -30,3 +30,14 @@ find_wiggliness_f_k <- function(alpha_k, S_k) {
 find_pen_loglikelihood_k <- function(alpha_k, sp, X_k, S_k, fit_km1) {
     find_loglikelihood_k(alpha_k, X_k, fit_km1) - sp / fit_km1$sigma^2 * find_wiggliness_f_k(alpha_k, S_k)
 }
+
+loglikelihood_k_grad <- function(alpha_k, X_k, fit_km1) {
+    f_k <- as.numeric(X_k %*% alpha_k)
+    dl_comp <- matrix(NA, nrow = length(alpha_k), ncol = length(fit_km1$cluster_info))
+    for(c in seq_along(fit_km1$cluster_info)) {
+        info_km1_c <- fit_km1$cluster_info[[c]]
+        X_kc <- X_k[info_km1_c$rows, , drop = FALSE]
+        dl_comp[, c] <- crossprod(X_kc, ldmvnorm_grad(f_k[info_km1_c$rows], info_km1_c))
+    }
+    rowSums(dl_comp)
+}
