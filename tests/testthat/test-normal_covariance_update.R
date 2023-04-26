@@ -29,5 +29,48 @@ test_that("ldmvnorm and derivatives work", {
 
     expect_equal(ld_grad_auto, ld_grad_man, tolerance = 1e-4)
  
-   
+
+    log_det_Sigma <- function(a, info_km1) {
+          b <- info_km1$Sigma_inv %*% a
+          c <- 1 + sum(a * b)
+          log(c) + info_km1$ldet_Sigma
+    }
+    
+    b <- as.numeric(info_km1$Sigma_inv %*% a)
+    
+    c <- 1 + sum(a * b)
+    dc <- 2 * b
+    d2c <- 2 * info_km1$Sigma_inv
+
+    log_det_Sigma_hess_auto <- log_det_Sigma_hess(c, dc, d2c)
+    log_det_Sigma_hess_man <- numDeriv::hessian(log_det_Sigma, a, info_km1 = info_km1)
+
+    expect_equal(log_det_Sigma_hess_auto, log_det_Sigma_hess_man, tolerance = 1e-4)
+
+    quad_form <- function(a, info_km1) {
+         b <- info_km1$Sigma_inv %*% a
+         c <- 1 + sum(a * b)
+         ldet_Sigma <- log(c) + info_km1$ldet_Sigma
+         d <- sum(info_km1$Sigma_inv_z * a)
+         
+         info_km1$tz_Sigma_inv_z - d^2/c
+    }
+
+        
+    d <- sum(info_km1$Sigma_inv_z * a)
+    dd <- as.numeric(info_km1$Sigma_inv_z)
+
+    
+    quad_form_hess_auto <- quad_form_hess(c, dc, d2c, d, dd)
+    quad_form_hess_man <- numDeriv::hessian(quad_form, a, info_km1 = info_km1)
+    
+    expect_equal(quad_form_hess_auto, quad_form_hess_man, tolerance = 1e-4)
+
+    ld_hess_auto <- ldmvnorm_hess(a, info_km1)
+    ld_hess_man <- numDeriv::hessian(ldmvnorm, a, info_km1 = info_km1)
+
+    expect_equal(ld_hess_auto, ld_hess_man, tolerance = 1e-4)
+ 
+
+
 })
