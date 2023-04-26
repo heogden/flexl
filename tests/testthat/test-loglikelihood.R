@@ -29,4 +29,14 @@ test_that("derivatives of loglikelihood are correct", {
     loglikelihood_hess_auto <- loglikelihood_k_hess(alpha_k, X_k, fit_km1)
 
     expect_equal(loglikelihood_hess_auto, loglikelihood_hess_man)
+
+    pen_loglikelihood_grad_man <- numDeriv::grad(find_pen_loglikelihood_k, alpha_k,
+                                                 sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1)
+    pen_loglikelihood_grad_auto <- pen_loglikelihood_k_grad(alpha_k, sp, X_k, S_k, fit_km1)
+    expect_equal(pen_loglikelihood_grad_auto, pen_loglikelihood_grad_man)
+
+    pen_loglikelihood_hess_man <- numDeriv::hessian(find_pen_loglikelihood_k, alpha_k,
+                                                    sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1)
+    pen_loglikelihood_hess_auto <- pen_loglikelihood_k_hess(alpha_k, sp, X_k, S_k, fit_km1)
+    expect_equal(pen_loglikelihood_hess_auto, pen_loglikelihood_hess_man)
 })

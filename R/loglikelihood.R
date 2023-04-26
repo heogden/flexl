@@ -27,6 +27,16 @@ find_wiggliness_f_k <- function(alpha_k, S_k) {
     emulator::quad.form(S_k, alpha_k)
 }
 
+wiggliness_f_k_grad <- function(alpha_k, S_k) {
+    2 * as.numeric(crossprod(alpha_k, S_k))
+}
+
+wiggliness_f_k_hess <- function(S_k) {
+    2 * S_k
+}
+
+
+
 find_pen_loglikelihood_k <- function(alpha_k, sp, X_k, S_k, fit_km1) {
     find_loglikelihood_k(alpha_k, X_k, fit_km1) - sp / fit_km1$sigma^2 * find_wiggliness_f_k(alpha_k, S_k)
 }
@@ -42,6 +52,12 @@ loglikelihood_k_grad <- function(alpha_k, X_k, fit_km1) {
     rowSums(dl_comp)
 }
 
+pen_loglikelihood_k_grad <- function(alpha_k, sp, X_k, S_k, fit_km1) {
+    loglikelihood_k_grad(alpha_k, X_k, fit_km1) - sp / fit_km1$sigma^2 * wiggliness_f_k_grad(alpha_k, S_k)
+}
+
+
+
 loglikelihood_k_hess <- function(alpha_k, X_k, fit_km1) {
     f_k <- as.numeric(X_k %*% alpha_k)
     nc <- length(fit_km1$cluster_info)
@@ -54,3 +70,6 @@ loglikelihood_k_hess <- function(alpha_k, X_k, fit_km1) {
     rowSums(d2l_comp, dims = 2)
 }
 
+pen_loglikelihood_k_hess <- function(alpha_k, sp, X_k, S_k, fit_km1) {
+    loglikelihood_k_hess(alpha_k, X_k, fit_km1) - sp / fit_km1$sigma^2 * wiggliness_f_k_hess(S_k)
+}
