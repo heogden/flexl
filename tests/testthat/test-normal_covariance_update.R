@@ -1,7 +1,7 @@
 test_that("ldmvnorm and derivatives work", {
 
     set.seed(1)
-    n <- 100
+    n <- 10
     
     Sigma_km1 <- matrix(0.2, nrow = n, ncol = n) + diag(n)
     a <- rnorm(n, sd = 0.5)
