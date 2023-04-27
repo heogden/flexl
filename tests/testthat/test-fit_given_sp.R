@@ -1,7 +1,5 @@
-
-
 test_that("can fit normal model with fixed k and penalty pars", {
-    data_1 <- generate_test_data_1()
+    data1 <- generate_test_data_1()
 
     sp <- 1000
     sigma <- 0.1

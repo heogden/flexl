@@ -5,16 +5,16 @@ optimize_alpha_k_given_sigma <- function(sigma, sp, X_k, S_k, fit_km1, storage) 
         sigma_closest <- sigma_stored[which_sigma_closest]
         if(abs(log(sigma) - log(sigma_closest)) < 1e-6)
             return(storage[[which_sigma_closest]])
-        alpha_k_init <- storage[[which_sigma_closest]]$par
+        alpha_k_init <- storage[[which_sigma_closest]]$estimate
     } else {
         alpha_k_init <- rep(0.1, ncol(X_k))
     }
 
     fit_km1_sigma <- update_fit_sigma(fit_km1, sigma)
-    
-    opt_out <- optim(alpha_k_init, find_pen_loglikelihood_k,
-                     sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma,
-                     method = "BFGS", control = list(fnscale = -1))
+    opt_out <- nlm(find_pen_deviance_k, alpha_k_init,
+                   sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma,
+                   check.analyticals = FALSE)
+        
     opt_out$sigma <- sigma
     opt_out
 }
@@ -24,22 +24,26 @@ optimize_sigma_k <- function(sp, X_k, S_k, fit_km1, data) {
     storage <- list()
 
     counter <- 1
-    lpen_prof_sigma <- function(sigma) {
+    dpen_prof_sigma <- function(sigma) {
         result <- tryCatch({
             opt_out <- optimize_alpha_k_given_sigma(sigma, sp, X_k, S_k, fit_km1, storage)
             storage[[counter]] <<- opt_out
             counter <<- counter + 1
-            opt_out$value
-        },  error = function(c) -Inf)
+            result <- opt_out$minimum
+        },  error = function(c) {
+            warning(c)
+            Inf
+        }
+        )
         result
     }
-    
-    opt_out_lsigma <- optim(fit_km1$sigma, lpen_prof_sigma, method = "L-BFGS-B",
-                            lower = 1e-6, upper = fit_km1$sigma,
-                            control = list(fnscale = -1))
 
-    opt_out <- storage[[which.max(sapply(storage, "[[", "value"))]]
-    alpha_k <- opt_out$par
+    
+    opt_out_lsigma <- optim(fit_km1$sigma, dpen_prof_sigma, method = "L-BFGS-B",
+                            lower = 1e-6, upper = fit_km1$sigma)
+
+    opt_out <- storage[[which.min(sapply(storage, "[[", "minimum"))]]
+    alpha_k <- opt_out$estimate
     sigma_hat <- opt_out$sigma
 
     rm(counter, storage)
