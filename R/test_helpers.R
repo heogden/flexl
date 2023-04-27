@@ -29,6 +29,9 @@ generate_test_data_1 <- function() {
     sigma <- 0.1
     y <- eta + rnorm(n, sd = sigma)
 
-    data.frame(c = c, x = x, y = y)
+    list(data = data.frame(c = c, x = x, y = y),
+         mu = mu,
+         delta = delta,
+         eta = eta)
 }
 

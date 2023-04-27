@@ -1,5 +1,9 @@
 test_that("can fit normal model with fixed k and penalty pars", {
-    data1 <- generate_test_data_1()
+    data_full <- generate_test_data_1()
+    data1 <- data_full$data
+    mu <- data_full$mu
+    delta <- data_full$delta
+    eta <- data_full$eta
 
     sp <- 1000
     sigma <- 0.1
@@ -19,7 +23,7 @@ test_that("can fit normal model with fixed k and penalty pars", {
     lines(x_grid, sqrt(0.5) * delta(x_grid)[,1], lty = 2)
 
     curve(mod[[4]]$f(x)[,2], from = 0, to = 1)
-    lines(x_grid, -sqrt(0.1) * delta(x_grid)[,2], lty = 2)
+    lines(x_grid, sqrt(0.1) * delta(x_grid)[,2], lty = 2)
 
     sigmas <- sapply(mod, "[[", "sigma")
     
@@ -31,8 +35,6 @@ test_that("can fit normal model with fixed k and penalty pars", {
     #' could use some cut off in FVE (e.g. 0.99) to select k
 
     library(tidyverse)
-
-    predict_flexl(mod[[3]]
     
     pred_data <- bind_cols(x = data1$x, c = data1$c, eta = eta) %>%
         group_by(c) %>%

@@ -1,5 +1,5 @@
 test_that("derivatives of loglikelihood are correct", {
-    data <- generate_test_data_1()
+    data <- generate_test_data_1()$data
     
     nbasis <- 5
     sp <- 100
