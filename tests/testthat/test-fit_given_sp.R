@@ -16,6 +16,8 @@ test_that("can fit normal model with fixed k and penalty pars", {
     sapply(mod10, "[[", "log_ml")
     sapply(mod, "[[", "log_ml")
     sapply(mod1e5, "[[", "log_ml")
+
+    #' now always seems to prefer the smaller tuning par!
     
     plot(data1$x, data1$y)
     curve(mod[[1]]$f0(x), col = 2, add = TRUE, lwd = 2)
