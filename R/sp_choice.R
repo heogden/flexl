@@ -7,13 +7,13 @@ log_det <- function(x) {
 
 #' approximate the log marginal likelihood
 #' by using a Laplace approximation
-#' if inv = TRUE, pass in the inverse of the variance (Sigma)
-#' if inv = FALSE, pass in the variance (Sigma)
-approx_log_ml_contrib <- function(Sigma, inv) {
-    d <- nrow(Sigma)
-    ldSigma <- ifelse(inv, 1, -1) * log_det(Sigma)
+#' approximates - log phi(0, 0, Sigma)
+#' if inv = TRUE, pass in the inverse of the variance (M = Sigma_inv)
+#' if inv = FALSE, pass in the variance (M = Sigma)
+approx_log_ml_contrib <- function(M, inv) {
+    d <- nrow(M)
+    ldSigma <- ifelse(inv, -1, 1) * log_det(M)
     d/2 * log(2 * pi) + 1/2 * ldSigma
-    
 }
 
 #' approx log marginal likelihood for the last fit in the list
