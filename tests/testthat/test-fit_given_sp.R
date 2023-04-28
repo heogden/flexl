@@ -10,14 +10,39 @@ test_that("can fit normal model with fixed k and penalty pars", {
     nbasis <- 10
 
     mod <- fit_given_sp(data1, sp, 3, nbasis)
-    mod10 <- fit_given_sp(data1, 10, 3, nbasis) 
-    mod1e5 <- fit_given_sp(data1, 1e5, 3, nbasis)
 
+    library(mgcv)
+    mod_gam <- gam(y ~ s(x), data = data1)
+
+    sp_poss <- exp(seq(-1, 10, length.out = 20))
+
+    fit_mod <- function(sp) {
+        mod <- fit_given_sp(data1, sp, 0, nbasis)
+        mod[[1]]
+    }
+    
+    
+    mod_poss <- lapply(sp_poss, fit_mod)
+    ml_poss <- sapply(mod_poss, "[[", "log_ml")
+    
+    plot(log(sp_poss), ml_poss, type = "b")
+    #' stabilises around 2000 or so 
+    sp_poss[which.max(ml_poss)]
+    
     sapply(mod10, "[[", "log_ml")
     sapply(mod, "[[", "log_ml")
     sapply(mod1e5, "[[", "log_ml")
 
+    mod10[[1]]$lpen_hat
+    mod1e5[[1]]$lpen_hat
+    
     #' now always seems to prefer the smaller tuning par!
+
+    data <- data1
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
+
+    Matrix::rankMatrix(basis$S)
+    #' a rank 8 matrix (while dimension is 10)
     
     plot(data1$x, data1$y)
     curve(mod[[1]]$f0(x), col = 2, add = TRUE, lwd = 2)

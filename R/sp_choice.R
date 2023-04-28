@@ -1,18 +1,11 @@
-log_det <- function(x) {
-    drop_attributes(
-        determinant(x, logarithm = TRUE)$modulus
-    )
-}
 
 
 #' approximate the log marginal likelihood
 #' by using a Laplace approximation
 #' approximates - log phi(0, 0, Sigma)
-#' if inv = TRUE, pass in the inverse of the variance (M = Sigma_inv)
-#' if inv = FALSE, pass in the variance (M = Sigma)
-approx_log_ml_contrib <- function(M, inv) {
-    d <- nrow(M)
-    ldSigma <- ifelse(inv, -1, 1) * log_det(M)
+approx_log_ml_contrib <- function(Sigma_inv) {
+    d <- nrow(Sigma_inv)
+    ldSigma <- -log_det(Sigma_inv)
     d/2 * log(2 * pi) + 1/2 * ldSigma
 }
 
@@ -20,5 +13,5 @@ approx_log_ml_contrib <- function(M, inv) {
 approx_log_ml <- function(fits) {
     fit <- fits[[length(fits)]]
     log_ml_contribs <- sapply(fits, "[[", "log_ml_contrib")
-    fit$l_hat + sum(log_ml_contribs)
+    fit$lpen_hat + sum(log_ml_contribs)
 }

@@ -11,11 +11,14 @@ fit_given_sp <- function(data, sp, kmax, nbasis) {
     fits[[1]]$log_ml <- approx_log_ml(fits)
     
     #' fit with k variation functions, fixing mean and first k-1 functions
-    for(k in 1:kmax) {
-        fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis)
-        fits[[k+1]]$log_ml <- approx_log_ml(fits)
-        #' stop early if f_j very close to 0
+    if(kmax > 0) {
+        for(k in 1:kmax) {
+            fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis)
+            fits[[k+1]]$log_ml <- approx_log_ml(fits)
+            #' stop early if f_j very close to 0
+        }
     }
+    
     fits
 }
 
@@ -61,7 +64,8 @@ fit_0 <- function(data, sp, basis) {
     
     Xt_y <- crossprod(X_0, data$y)
     XtX <- crossprod(X_0, X_0)
-    
+
+
     beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
     y_hat_0 <- X_0 %*% beta_0
     resid <- data$y - y_hat_0
@@ -70,18 +74,26 @@ fit_0 <- function(data, sp, basis) {
     clusters <- unique(data$c)
     cluster_info <- lapply(clusters, init_cluster_info, data = data, sigma = sigma,
                            z = resid)
-
-    At <- solve(XtX + sp * basis$S, t(X_0))
-    var_beta0 <- sigma^2 * tcrossprod(At)
     
+    Sigma_inv <- (XtX + sp * basis$S) / sigma^2
+
+    l_hat <- sum(dnorm(data$y, y_hat_0, sd = sigma, log = TRUE))
+    #' r is rank of S
+    S <- basis$S
+    r <- nbasis - 2
+    #' lprior_hat is the log of the prior for beta0, evaluated at beta0_hat
+    spr <- sp / sigma^2
+    qhat <- emulator::quad.form(S, beta_0)
+    lprior_hat <- - r/2 * log(2*pi) + 1/2 * log_det_gen(spr * S, r) - spr/2 * qhat
+    lpen_hat <- l_hat + lprior_hat
     
     list(k = 0,
          beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
          sigma = sigma,
          u = matrix(nrow = length(unique(clusters)), ncol = 0),
-         l_hat = sum(dnorm(data$y, y_hat_0, sd = sigma, log = TRUE)),
-         log_ml_contrib = approx_log_ml_contrib(var_beta0, inv = FALSE),
+         lpen_hat = lpen_hat,
+         log_ml_contrib = approx_log_ml_contrib(Sigma_inv),
          f0_x = y_hat_0,
          f0 = find_spline_fun(beta_0, basis),
          f_x = matrix(nrow = length(y_hat_0), ncol = 0),
