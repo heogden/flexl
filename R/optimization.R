@@ -13,7 +13,7 @@ optimize_alpha_k_given_sigma <- function(sigma, sp, X_k, S_k, fit_km1, storage) 
     fit_km1_sigma <- update_fit_sigma(fit_km1, sigma)
     opt_out <- nlm(find_pen_deviance_k, alpha_k_init,
                    sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma,
-                   check.analyticals = FALSE)
+                   hessian = TRUE, check.analyticals = FALSE)
         
     opt_out$sigma <- sigma
     opt_out
@@ -53,6 +53,9 @@ optimize_sigma_k <- function(sp, X_k, S_k, fit_km1, data) {
     f_k <- X_k %*% alpha_k
     fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
     fit$alpha_k <- alpha_k
+    fit$l_hat <- -opt_out$minimum / 2
+    fit$hessian <- -opt_out$hessian / 2
+    fit$log_ml_contrib <- approx_log_ml_contrib(fit$hessian, inv = TRUE)
 
     fit$f_x <- cbind(fit$f_x, f_k)
     fit$u <- find_u_hat(sigma_hat, data, fit$f0_x, fit$f_x)

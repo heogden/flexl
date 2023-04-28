@@ -10,7 +10,16 @@ test_that("can fit normal model with fixed k and penalty pars", {
     nbasis <- 10
 
     mod <- fit_given_sp(data1, sp, 3, nbasis)
+    mod10 <- fit_given_sp(data1, 10, 3, nbasis) 
+    mod1e5 <- fit_given_sp(data1, 1e5, 3, nbasis)
 
+    sapply(mod10, "[[", "log_ml")
+    sapply(mod, "[[", "log_ml")
+    sapply(mod1e5, "[[", "log_ml")
+    #' criteria increasing with sp
+    #' but does not seem a reliable way to choose k
+
+    
     plot(data1$x, data1$y)
     curve(mod[[1]]$f0(x), col = 2, add = TRUE, lwd = 2)
     curve(mu, add = TRUE, lty = 2)

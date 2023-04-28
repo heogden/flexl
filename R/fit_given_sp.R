@@ -8,10 +8,12 @@ fit_given_sp <- function(data, sp, kmax, nbasis) {
     fits <- list()
     #' fit the mean-only model (k = 0)
     fits[[1]] <- fit_0(data, sp, basis)
+    fits[[1]]$log_ml <- approx_log_ml(fits)
     
     #' fit with k variation functions, fixing mean and first k-1 functions
     for(k in 1:kmax) {
         fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis)
+        fits[[k+1]]$log_ml <- approx_log_ml(fits)
         #' stop early if f_j very close to 0
     }
     fits
@@ -68,12 +70,18 @@ fit_0 <- function(data, sp, basis) {
     clusters <- unique(data$c)
     cluster_info <- lapply(clusters, init_cluster_info, data = data, sigma = sigma,
                            z = resid)
+
+    At <- solve(XtX + sp * basis$S, t(X_0))
+    var_beta0 <- sigma^2 * tcrossprod(At)
+    
     
     list(k = 0,
          beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
          sigma = sigma,
          u = matrix(nrow = length(unique(clusters)), ncol = 0),
+         l_hat = sum(dnorm(data$y, y_hat_0, sd = sigma, log = TRUE)),
+         log_ml_contrib = approx_log_ml_contrib(var_beta0, inv = FALSE),
          f0_x = y_hat_0,
          f0 = find_spline_fun(beta_0, basis),
          f_x = matrix(nrow = length(y_hat_0), ncol = 0),
