@@ -62,8 +62,8 @@ find_wiggliness_f_k <- function(alpha_k, S_k, derivs = TRUE) {
 find_pen_deviance_k <- function(alpha_k, sp, X_k, S_k, fit_km1) {
     l <- find_loglikelihood_k(alpha_k, X_k, fit_km1)
     w <-  find_wiggliness_f_k(alpha_k, S_k)
-    spr <- sp / fit_km1$sigma^2
-    pen <- -spr / 2 * w
+    spr <- sp / (2 * fit_km1$sigma^2)
+    pen <- -spr * w
     res <- -2 * (l + pen)
     attr(res, "gradient") <- - 2 * (attr(l, "gradient") - spr * attr(w, "gradient"))
     attr(res, "hessian") <- - 2 * (attr(l, "hessian") - spr * attr(w, "hessian"))
