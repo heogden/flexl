@@ -50,17 +50,20 @@ test_that("can fit normal model with fixed k and penalty pars", {
     }
     
     
-    mod_poss <- lapply(sp_poss, fit_mod, k = 2)
+    mod_poss <- lapply(sp_poss, fit_mod, k = 3)
     
     ml_poss_0 <- sapply(mod_poss, function(x){x[[1]]$log_ml})
     ml_poss_1 <- sapply(mod_poss, function(x){x[[2]]$log_ml})
     ml_poss_2 <- sapply(mod_poss, function(x){x[[3]]$log_ml})
+    ml_poss_3 <- sapply(mod_poss, function(x){x[[4]]$log_ml})
     
 
-    plot(range(log(sp_poss)), range(c(ml_poss_0, ml_poss_1, ml_poss_2)), col = 0)
+    plot(range(log(sp_poss)), range(c(ml_poss_0, ml_poss_1, ml_poss_2, ml_poss_3)), col = 0)
     lines(log(sp_poss), ml_poss_0)
     lines(log(sp_poss), ml_poss_1, col = 2)
     lines(log(sp_poss), ml_poss_2, col = 3)
+    lines(log(sp_poss), ml_poss_3, col = 4)
+    
 
     plot(log(sp_poss), ml_poss_2, type = "b")
     sp_poss[which.max(ml_poss_2)]
