@@ -14,7 +14,7 @@ optimize_alpha_k_given_sigma <- function(sigma, sp, X_k, S_k, fit_km1, storage) 
     opt_out <- nlm(find_pen_deviance_k, alpha_k_init,
                    sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma,
                    hessian = TRUE, check.analyticals = FALSE)
-        
+
     opt_out$sigma <- sigma
     opt_out
 }
@@ -53,7 +53,11 @@ optimize_sigma_k <- function(sp, X_k, S_k, fit_km1, data) {
     f_k <- X_k %*% alpha_k
     fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
     fit$alpha_k <- alpha_k
-    fit$lpen_hat <- -opt_out$minimum / 2
+    fit$l_hat <- find_loglikelihood_k(alpha_k, X_k, fit_km1, derivs = FALSE)
+    spr <- sp / (2  * sigma_hat^2)
+    #' TODO: need to fix this to include full lprior for alpha_k,
+    #' not just the penalty term
+    fit$lprior_hat <-  -spr * find_wiggliness_f_k(alpha_k, S_k, derivs = FALSE)
     fit$Sigma_inv <- opt_out$hessian / 2
     fit$log_ml_contrib <- approx_log_ml_contrib(fit$Sigma_inv)
 

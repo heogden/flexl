@@ -13,5 +13,6 @@ approx_log_ml_contrib <- function(Sigma_inv) {
 approx_log_ml <- function(fits) {
     fit <- fits[[length(fits)]]
     log_ml_contribs <- sapply(fits, "[[", "log_ml_contrib")
-    fit$lpen_hat + sum(log_ml_contribs)
+    lprior_contribs <- sapply(fits, "[[", "lprior_hat")
+    fit$l_hat + sum(lprior_contribs) + sum(log_ml_contribs)
 }

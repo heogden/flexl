@@ -1,3 +1,31 @@
+test_that("fitting with mean-only works correctly", {
+    data_full <- generate_test_data_1()
+    data <- data_full$data
+
+    nbasis <- 10
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
+
+    sp <- 100
+    mod <- fit_0(data, sp, basis)
+
+    X <- basis$X
+    S <- basis$S
+
+    l_pen_beta <- function(beta, sigma) {
+        l <- sum(dnorm(data$y, X %*% beta, sd = sigma, log = TRUE))
+        spr <- sp / (2 * sigma^2)
+        pen <- - spr * emulator::quad.form(S, beta)
+        l + pen
+    }
+
+    opt_man <- optim(mod$beta_0, l_pen_beta, sigma = mod$sigma, control = list(fnscale = -1),
+                     method = "BFGS")
+
+    expect_equal(mod$beta_0, opt_man$par)
+    
+})
+
+
 test_that("can fit normal model with fixed k and penalty pars", {
     data_full <- generate_test_data_1()
     data1 <- data_full$data
@@ -8,9 +36,9 @@ test_that("can fit normal model with fixed k and penalty pars", {
     sp <- 1000
     sigma <- 0.1
     nbasis <- 10
-
+    
     mod <- fit_given_sp(data1, sp, 3, nbasis)
-
+    
     library(mgcv)
     mod_gam <- gam(y ~ s(x), data = data1)
 

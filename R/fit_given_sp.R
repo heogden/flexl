@@ -65,7 +65,7 @@ fit_0 <- function(data, sp, basis) {
     Xt_y <- crossprod(X_0, data$y)
     XtX <- crossprod(X_0, X_0)
 
-
+    
     beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
     y_hat_0 <- X_0 %*% beta_0
     resid <- data$y - y_hat_0
@@ -75,24 +75,27 @@ fit_0 <- function(data, sp, basis) {
     cluster_info <- lapply(clusters, init_cluster_info, data = data, sigma = sigma,
                            z = resid)
     
-    Sigma_inv <- (XtX + sp * basis$S) / sigma^2
 
     l_hat <- sum(dnorm(data$y, y_hat_0, sd = sigma, log = TRUE))
     #' r is rank of S
     S <- basis$S
     r <- nbasis - 2
-    #' lprior_hat is the log of the prior for beta0, evaluated at beta0_hat
-    spr <- sp / sigma^2
+    Sigma_inv <- (XtX + sp * basis$S) / sigma^2
+
+ 
     qhat <- emulator::quad.form(S, beta_0)
-    lprior_hat <- - r/2 * log(2*pi) + 1/2 * log_det_gen(spr * S, r) - spr/2 * qhat
-    lpen_hat <- l_hat + lprior_hat
+    spr <- sp / (2 * sigma^2)
+
+    #' lprior_hat is the log prior for beta0, evaluated at beta0_hat
+    lprior_hat <- - r/2 * log(2*pi) + 1/2 * log_det_gen(2 * spr * S, r) - spr * qhat
     
     list(k = 0,
          beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
          sigma = sigma,
          u = matrix(nrow = length(unique(clusters)), ncol = 0),
-         lpen_hat = lpen_hat,
+         l_hat = l_hat,
+         lprior_hat = lprior_hat,
          log_ml_contrib = approx_log_ml_contrib(Sigma_inv),
          f0_x = y_hat_0,
          f0 = find_spline_fun(beta_0, basis),
