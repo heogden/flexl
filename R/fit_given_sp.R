@@ -41,7 +41,7 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
     }
     
     #' optimize loglikelihood for sigma and alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
-    fit <- optimize_sigma_k(sp, X_k, S_k, fit_km1, data)
+    fit <- optimize_sigma_k(sp, k, X_k, S_k, fit_km1, data)
 
     alpha_k <- fit$alpha_k
     
@@ -87,7 +87,7 @@ fit_0 <- function(data, sp, basis) {
     spr <- sp / (2 * sigma^2)
 
     #' lprior_hat is the log prior for beta0, evaluated at beta0_hat
-    lprior_hat <- - r/2 * log(2*pi) + 1/2 * log_det_gen(2 * spr * S, r) - spr * qhat
+    lprior_hat <- find_lprior(0, beta_0, S, spr)
     
     list(k = 0,
          beta_0 = beta_0,

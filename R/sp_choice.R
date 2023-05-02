@@ -16,3 +16,16 @@ approx_log_ml <- function(fits) {
     lprior_contribs <- sapply(fits, "[[", "lprior_hat")
     fit$l_hat + sum(lprior_contribs) + sum(log_ml_contribs)
 }
+
+find_lprior <- function(k, alpha_k, S_k, spr) {
+    #' r is nbasis - 2 
+    r <- nbasis - 2
+    #' check r is correct in a range of cases
+    r_man <- Matrix::rankMatrix(S_k)
+
+    if(r != r_man)
+        stop("rank is wrong, r is ", r, ", r_man is ", r_man)
+    
+    pen <- -spr * find_wiggliness_f_k(alpha_k, S_k, derivs = FALSE)
+    pen - r/2 * log(2 * pi) + 1/2 * log_det_gen(2 * spr * S_k, r)
+}

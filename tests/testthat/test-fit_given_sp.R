@@ -38,39 +38,34 @@ test_that("can fit normal model with fixed k and penalty pars", {
     nbasis <- 10
     
     mod <- fit_given_sp(data1, sp, 3, nbasis)
+    mod_10 <- fit_given_sp(data1, 10, 2, nbasis)
     
     library(mgcv)
     mod_gam <- gam(y ~ s(x), data = data1)
 
-    sp_poss <- exp(seq(-1, 10, length.out = 20))
+    sp_poss <- exp(seq(-1, 10, length.out = 10))
 
-    fit_mod <- function(sp) {
-        mod <- fit_given_sp(data1, sp, 0, nbasis)
-        mod[[1]]
+    fit_mod <- function(sp, k) {
+        fit_given_sp(data1, sp, k, nbasis)
     }
     
     
-    mod_poss <- lapply(sp_poss, fit_mod)
-    ml_poss <- sapply(mod_poss, "[[", "log_ml")
+    mod_poss <- lapply(sp_poss, fit_mod, k = 2)
     
-    plot(log(sp_poss), ml_poss, type = "b")
-    #' stabilises around 2000 or so 
-    sp_poss[which.max(ml_poss)]
+    ml_poss_0 <- sapply(mod_poss, function(x){x[[1]]$log_ml})
+    ml_poss_1 <- sapply(mod_poss, function(x){x[[2]]$log_ml})
+    ml_poss_2 <- sapply(mod_poss, function(x){x[[3]]$log_ml})
     
-    sapply(mod10, "[[", "log_ml")
-    sapply(mod, "[[", "log_ml")
-    sapply(mod1e5, "[[", "log_ml")
 
-    mod10[[1]]$lpen_hat
-    mod1e5[[1]]$lpen_hat
-    
-    #' now always seems to prefer the smaller tuning par!
+    plot(range(log(sp_poss)), range(c(ml_poss_0, ml_poss_1, ml_poss_2)), col = 0)
+    lines(log(sp_poss), ml_poss_0)
+    lines(log(sp_poss), ml_poss_1, col = 2)
+    lines(log(sp_poss), ml_poss_2, col = 3)
 
-    data <- data1
-    basis <- find_orthogonal_spline_basis(nbasis, data$x)
-
-    Matrix::rankMatrix(basis$S)
-    #' a rank 8 matrix (while dimension is 10)
+    plot(log(sp_poss), ml_poss_2, type = "b")
+    sp_poss[which.max(ml_poss_2)]
+    #' favours large value of the smoothing parameter
+ 
     
     plot(data1$x, data1$y)
     curve(mod[[1]]$f0(x), col = 2, add = TRUE, lwd = 2)

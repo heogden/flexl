@@ -20,7 +20,7 @@ optimize_alpha_k_given_sigma <- function(sigma, sp, X_k, S_k, fit_km1, storage) 
 }
 
 
-optimize_sigma_k <- function(sp, X_k, S_k, fit_km1, data) {
+optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data) {
     storage <- list()
 
     counter <- 1
@@ -55,9 +55,7 @@ optimize_sigma_k <- function(sp, X_k, S_k, fit_km1, data) {
     fit$alpha_k <- alpha_k
     fit$l_hat <- find_loglikelihood_k(alpha_k, X_k, fit_km1, derivs = FALSE)
     spr <- sp / (2  * sigma_hat^2)
-    #' TODO: need to fix this to include full lprior for alpha_k,
-    #' not just the penalty term
-    fit$lprior_hat <-  -spr * find_wiggliness_f_k(alpha_k, S_k, derivs = FALSE)
+    fit$lprior_hat <-  find_lprior(k, alpha_k, S_k, spr)
     fit$Sigma_inv <- opt_out$hessian / 2
     fit$log_ml_contrib <- approx_log_ml_contrib(fit$Sigma_inv)
 
