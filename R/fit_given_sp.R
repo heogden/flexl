@@ -2,7 +2,7 @@
 #' @param sigma the standard deviation of the normal errors
 #' @param kmax the maximum number of variation functions to use
 #' @param nbasis the number of spline basis functions to use
-fit_given_sp <- function(data, sp, kmax, nbasis) {
+fit_given_sp <- function(data, sp, kmax, nbasis, fit_other_sp = NULL) {
     #' find the basis to use
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
     fits <- list()
@@ -13,7 +13,12 @@ fit_given_sp <- function(data, sp, kmax, nbasis) {
     #' fit with k variation functions, fixing mean and first k-1 functions
     if(kmax > 0) {
         for(k in 1:kmax) {
-            fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis)
+            if(!is.null(fit_other_sp))
+                fit_k_other_sp <- fit_other_sp[[k+1]]
+            else
+                fit_k_other_sp <- NULL
+            
+            fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis, fit_k_other_sp)
             fits[[k+1]]$log_ml <- approx_log_ml(fits)
             #' stop early if f_j very close to 0
         }
@@ -23,7 +28,7 @@ fit_given_sp <- function(data, sp, kmax, nbasis) {
 }
 
 #' @param k the number of variation functions to use 
-fit_given_k <- function(data, sp, k, fit_km1, basis) {
+fit_given_k <- function(data, sp, k, fit_km1, basis, fit_k_other_sp) {
     nbasis <- nrow(basis$S)
     
     if(k > 1) {
@@ -41,7 +46,7 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
     }
     
     #' optimize loglikelihood for sigma and alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
-    fit <- optimize_sigma_k(sp, k, X_k, S_k, fit_km1, data)
+    fit <- optimize_sigma_k(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp)
 
     alpha_k <- fit$alpha_k
     

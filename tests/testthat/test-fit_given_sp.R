@@ -33,12 +33,19 @@ test_that("can fit normal model with fixed k and penalty pars", {
     delta <- data_full$delta
     eta <- data_full$eta
 
-    sp <- 1000
-    sigma <- 0.1
     nbasis <- 10
+
+    t1000 <- system.time(mod <- fit_given_sp(data1, 1000, 3, nbasis))
+    t100 <-  system.time(mod100 <- fit_given_sp(data1, 100, 3, nbasis))
+    t100_other_fit <- system.time(mod100_other_fit <- fit_given_sp(data1, 100, 3, nbasis, fit_other_sp = mod))
+
+    expect_lt(t100_other_fit[1], t100[1])
+    expect_equal(mod100_other_fit[[3]]$beta, mod100[[3]]$beta, tolerance = 1e-4)
+
+    #' not yet working as expected:
+    expect_equal(mod100_other_fit[[4]]$beta, mod100[[4]]$beta, tolerance = 1e-4)
     
-    mod <- fit_given_sp(data1, sp, 3, nbasis)
-    mod_10 <- fit_given_sp(data1, 10, 2, nbasis)
+
     
     library(mgcv)
     mod_gam <- gam(y ~ s(x), data = data1)
@@ -49,6 +56,7 @@ test_that("can fit normal model with fixed k and penalty pars", {
         fit_given_sp(data1, sp, k, nbasis)
     }
     
+
     
     mod_poss <- lapply(sp_poss, fit_mod, k = 3)
     
