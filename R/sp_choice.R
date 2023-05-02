@@ -18,11 +18,10 @@ approx_log_ml <- function(fits) {
 }
 
 find_lprior <- function(k, alpha_k, S_k, spr) {
-    #' r is nbasis - 2 
-    r <- nbasis - 2
-    #' check r is correct in a range of cases
+    r <- min(nbasis - 2, nbasis - k + 1)
+    
+    #' check r is correct (can eventually remove)
     r_man <- Matrix::rankMatrix(S_k)
-
     if(r != r_man)
         stop("rank is wrong, r is ", r, ", r_man is ", r_man)
     
