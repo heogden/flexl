@@ -61,12 +61,12 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
     alpha_k <- opt_out$estimate
     sigma_hat <- opt_out$sigma
 
-    fit_km1_sigma <- update_fit_sigma(fit_km1, sigma_hat)
-    hessian <-  attr(find_pen_deviance_k(alpha_k, sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma), "hessian")
 
     rm(counter, storage)
         
     fit <- update_fit_sigma(fit_km1, sigma_hat)
+
+    hessian <-  attr(find_pen_deviance_k(alpha_k, sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit), "hessian")
     
     f_k <- X_k %*% alpha_k
     fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
