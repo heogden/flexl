@@ -143,8 +143,6 @@ update_fit_sigma <- function(fit_prev, sigma) {
     s2_diff <- sigma^2 - fit_prev$sigma^2
 
     fit_prev$sigma <- sigma
-    fit_prev$spr <- fit_prev$sp / (2  * sigma^2)
-
     fit_prev$cluster_info <- lapply(fit_prev$cluster_info, update_cluster_info_sigma,
                                     s2_diff = s2_diff)
     fit_prev
