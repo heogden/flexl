@@ -94,7 +94,7 @@ fit_0 <- function(data, sp, basis) {
     l_hat <- sum(dnorm(data$y, y_hat_0, sd = sigma, log = TRUE))
     #' r is rank of S
     S <- basis$S
-    r <- nbasis - 2
+    r <- nrow(S) - 2
     Sigma_inv <- (XtX + sp * basis$S) / sigma^2
 
  

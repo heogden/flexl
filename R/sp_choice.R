@@ -22,6 +22,7 @@ approx_log_ml <- function(fits) {
 }
 
 find_lprior_fun <- function(k, alpha_k, S_k) {
+    nbasis <- length(alpha_k) + max(k - 1, 0)
     r <- min(nbasis - 2, nbasis - k + 1)
     
     #' check r is correct (can eventually remove)
