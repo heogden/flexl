@@ -17,10 +17,11 @@ optimize_alpha_k_given_sigma <- function(sigma, sp, X_k, S_k, fit_km1, storage, 
     }
 
     fit_km1_sigma <- update_fit_sigma(fit_km1, sigma)
+
     opt_out <- nlm(find_pen_deviance_k, alpha_k_init,
                    sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma,
-                   hessian = TRUE, check.analyticals = FALSE)
-
+                   hessian = FALSE, check.analyticals = FALSE)
+    
     opt_out$sigma <- sigma
     opt_out
 }
@@ -54,9 +55,14 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
     opt_out_lsigma <- optim(sigma_start, dpen_prof_sigma, method = "L-BFGS-B",
                             lower = 1e-6, upper = fit_km1$sigma)
 
+ 
+
     opt_out <- storage[[which.min(sapply(storage, "[[", "minimum"))]]
     alpha_k <- opt_out$estimate
     sigma_hat <- opt_out$sigma
+
+    fit_km1_sigma <- update_fit_sigma(fit_km1, sigma_hat)
+    hessian <-  attr(find_pen_deviance_k(alpha_k, sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma), "hessian")
 
     rm(counter, storage)
         
@@ -69,7 +75,7 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
     fit$spr <- sp / (2  * sigma_hat^2)
     fit$lprior_fun <-  find_lprior_fun(k, alpha_k, S_k)
     fit$l_pen_hat <- - opt_out$minimum / 2
-    fit$Sigma_inv <- opt_out$hessian / 2
+    fit$Sigma_inv <- hessian / 2
     fit$log_ml_contrib <- approx_log_ml_contrib(fit$Sigma_inv)
 
     fit$f_x <- cbind(fit$f_x, f_k)
