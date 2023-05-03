@@ -67,10 +67,9 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
     fit <- update_fit_sigma(fit_km1, sigma_hat)
 
     hessian <-  attr(find_pen_deviance_k(alpha_k, sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit), "hessian")
+
+    fit <- update_fit_alpha_k(fit, alpha_k, X_k, data)
     
-    f_k <- X_k %*% alpha_k
-    fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
-    fit$alpha_k <- alpha_k
     fit$l_hat <- find_loglikelihood_k(alpha_k, X_k, fit_km1, derivs = FALSE)
     fit$spr <- sp / (2  * sigma_hat^2)
     fit$lprior_fun <-  find_lprior_fun(k, alpha_k, S_k)
@@ -78,9 +77,15 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
     fit$Sigma_inv <- hessian / 2
     fit$log_ml_contrib <- approx_log_ml_contrib(fit$Sigma_inv)
 
-    fit$f_x <- cbind(fit$f_x, f_k)
-    fit$u <- find_u_hat(sigma_hat, data, fit$f0_x, fit$f_x)
+    fit
+}
 
+update_fit_alpha_k <- function(fit, alpha_k, X_k, data) {
+    f_k <- X_k %*% alpha_k
+    fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
+    fit$alpha_k <- alpha_k
+    fit$f_x <- cbind(fit$f_x, f_k)
+    fit$u <- find_u_hat(fit$sigma, data, fit$f0_x, fit$f_x)
 
     fit
 }
