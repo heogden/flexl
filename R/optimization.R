@@ -7,8 +7,11 @@ optimize_alpha_k_given_sigma <- function(sigma, sp, X_k, S_k, fit_km1, storage, 
             return(storage[[which_sigma_closest]])
         alpha_k_init <- storage[[which_sigma_closest]]$estimate
     } else {
-        if(!is.null(fit_k_other_sp))
+        if(!is.null(fit_k_other_sp)) {
             alpha_k_init <- fit_k_other_sp$alpha_k
+            if(mean(abs(alpha_k_init) < 0.01))
+                alpha_k_init <- rep(0.1, ncol(X_k))
+        }
         else
             alpha_k_init <- rep(0.1, ncol(X_k))
     }

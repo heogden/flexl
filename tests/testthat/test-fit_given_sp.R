@@ -40,12 +40,9 @@ test_that("can fit normal model with fixed k and penalty pars", {
     t100_other_fit <- system.time(mod100_other_fit <- fit_given_sp(data1, 100, 3, nbasis, fit_other_sp = mod))
 
     expect_lt(t100_other_fit[1], t100[1])
-    expect_equal(mod100_other_fit[[3]]$beta, mod100[[3]]$beta, tolerance = 1e-4)
-
-    #' not yet working as expected:
-    expect_equal(mod100_other_fit[[4]]$beta, mod100[[4]]$beta, tolerance = 1e-4)
     
-
+    expect_equal(mod100_other_fit[[4]]$beta, mod100[[4]]$beta, tolerance = 1e-4)
+    expect_equal(mod100_other_fit[[4]]$l_pen_hat, mod100[[4]]$l_pen_hat)
     
     library(mgcv)
     mod_gam <- gam(y ~ s(x), data = data1)
