@@ -43,56 +43,6 @@ test_that("can fit normal model with fixed k and penalty pars", {
     
     expect_equal(mod100_other_fit[[4]]$beta, mod100[[4]]$beta, tolerance = 1e-4)
     expect_equal(mod100_other_fit[[4]]$l_pen_hat, mod100[[4]]$l_pen_hat)
-    
-    sp_poss <- exp(seq(-1, 15, length.out = 10))
-
-    mod_poss <- list()
-    fit_other_sp <- NULL
-    for(i in seq_along(sp_poss)) {
-        mod_poss[[i]] <- fit_given_sp(data1, sp_poss[i], 3, 10, fit_other_sp)
-        fit_other_sp <- mod_poss[[i]]
-    }
-    
-    ml_poss_0 <- sapply(mod_poss, function(x){x[[1]]$log_ml})
-    ml_poss_1 <- sapply(mod_poss, function(x){x[[2]]$log_ml})
-    ml_poss_2 <- sapply(mod_poss, function(x){x[[3]]$log_ml})
-    ml_poss_3 <- sapply(mod_poss, function(x){x[[4]]$log_ml})
-    
-
-    plot(range(log(sp_poss)), range(c(ml_poss_0, ml_poss_1, ml_poss_2, ml_poss_3)), col = 0)
-    lines(log(sp_poss), ml_poss_0)
-    lines(log(sp_poss), ml_poss_1, col = 2)
-    lines(log(sp_poss), ml_poss_2, col = 3)
-    lines(log(sp_poss), ml_poss_3, col = 4)
-    
-
-    plot(log(sp_poss), ml_poss_2, type = "b")
-    sp_poss[which.max(ml_poss_2)]
-    #' favours large value of the smoothing parameter
- 
-    
-    plot(data1$x, data1$y)
-    curve(mod[[1]]$f0(x), col = 2, add = TRUE, lwd = 2)
-    curve(mu, add = TRUE, lty = 2)
-
-    #' fit reasonable (overfitting decreases with sp)
-
-    x_grid <- seq(0, 1, length.out = 100)
-    
-    curve(mod[[4]]$f(x)[,1], from = 0, to = 1)
-    lines(x_grid, sqrt(0.5) * delta(x_grid)[,1], lty = 2)
-
-    curve(mod[[4]]$f(x)[,2], from = 0, to = 1)
-    lines(x_grid, sqrt(0.1) * delta(x_grid)[,2], lty = 2)
-
-    sigmas <- sapply(mod, "[[", "sigma")
-    
-    #' could translate to fraction of "non-residual" variance explained?
-    resid_var <- min(sigmas^2)
-    non_resid_var <- sigmas^2 - resid_var
-    1 - non_resid_var / non_resid_var[1]
-
-    #' could use some cut off in FVE (e.g. 0.99) to select k
 
     library(tidyverse)
     

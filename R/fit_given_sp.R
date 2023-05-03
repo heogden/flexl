@@ -2,7 +2,7 @@
 #' @param sigma the standard deviation of the normal errors
 #' @param kmax the maximum number of variation functions to use
 #' @param nbasis the number of spline basis functions to use
-fit_given_sp <- function(data, sp, kmax, nbasis, fit_other_sp = NULL) {
+fit_given_sp <- function(data, sp, kmax, nbasis, fve_threshold = 1, fit_other_sp = NULL) {
     #' find the basis to use
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
     fits <- list()
@@ -20,12 +20,21 @@ fit_given_sp <- function(data, sp, kmax, nbasis, fit_other_sp = NULL) {
             
             fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis, fit_k_other_sp)
             fits[[k+1]]$log_ml <- approx_log_ml(fits)
-            #' stop early if f_j very close to 0
+            if(find_FVE(fits)[k] > fve_threshold)
+                break
         }
     }
     
     fits
 }
+
+find_FVE <- function(fits) {
+    sigmas <- sapply(fits, "[[", "sigma")
+    resid_var <- min(sigmas^2)
+    non_resid_var <- sigmas^2 - resid_var
+    1 - non_resid_var / non_resid_var[1]
+}
+
 
 #' @param k the number of variation functions to use 
 fit_given_k <- function(data, sp, k, fit_km1, basis, fit_k_other_sp) {
@@ -58,6 +67,7 @@ fit_given_k <- function(data, sp, k, fit_km1, basis, fit_k_other_sp) {
     
     fit$beta <- cbind(fit_km1$beta, beta_k)
     fit$f = find_spline_fun(fit$beta, basis)
+    fit$k <- k
     
     fit
 }
@@ -97,6 +107,7 @@ fit_0 <- function(data, sp, basis) {
          beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
          sigma = sigma,
+         sp = sp,
          spr = spr,
          u = matrix(nrow = length(unique(clusters)), ncol = 0),
          l_hat = l_hat,
