@@ -91,16 +91,16 @@ fit_0 <- function(data, sp, basis) {
     qhat <- emulator::quad.form(S, beta_0)
     spr <- sp / (2 * sigma^2)
 
-    #' lprior_hat is the log prior for beta0, evaluated at beta0_hat
-    lprior_hat <- find_lprior(0, beta_0, S, spr)
+    lprior_fun <- find_lprior_fun(0, beta_0, S)
     
     list(k = 0,
          beta_0 = beta_0,
          beta = matrix(nrow = ncol(X_0), ncol = 0),
          sigma = sigma,
+         spr = spr,
          u = matrix(nrow = length(unique(clusters)), ncol = 0),
          l_hat = l_hat,
-         lprior_hat = lprior_hat,
+         lprior_fun = lprior_fun,
          log_ml_contrib = approx_log_ml_contrib(Sigma_inv),
          f0_x = y_hat_0,
          f0 = find_spline_fun(beta_0, basis),

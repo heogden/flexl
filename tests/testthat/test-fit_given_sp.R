@@ -44,18 +44,14 @@ test_that("can fit normal model with fixed k and penalty pars", {
     expect_equal(mod100_other_fit[[4]]$beta, mod100[[4]]$beta, tolerance = 1e-4)
     expect_equal(mod100_other_fit[[4]]$l_pen_hat, mod100[[4]]$l_pen_hat)
     
-    library(mgcv)
-    mod_gam <- gam(y ~ s(x), data = data1)
+    sp_poss <- exp(seq(-1, 15, length.out = 10))
 
-    sp_poss <- exp(seq(-1, 10, length.out = 10))
-
-    fit_mod <- function(sp, k) {
-        fit_given_sp(data1, sp, k, nbasis)
+    mod_poss <- list()
+    fit_other_sp <- NULL
+    for(i in seq_along(sp_poss)) {
+        mod_poss[[i]] <- fit_given_sp(data1, sp_poss[i], 3, 10, fit_other_sp)
+        fit_other_sp <- mod_poss[[i]]
     }
-    
-
-    
-    mod_poss <- lapply(sp_poss, fit_mod, k = 3)
     
     ml_poss_0 <- sapply(mod_poss, function(x){x[[1]]$log_ml})
     ml_poss_1 <- sapply(mod_poss, function(x){x[[2]]$log_ml})

@@ -66,8 +66,9 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
     fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
     fit$alpha_k <- alpha_k
     fit$l_hat <- find_loglikelihood_k(alpha_k, X_k, fit_km1, derivs = FALSE)
-    spr <- sp / (2  * sigma_hat^2)
-    fit$lprior_hat <-  find_lprior(k, alpha_k, S_k, spr)
+    fit$spr <- sp / (2  * sigma_hat^2)
+    fit$lprior_fun <-  find_lprior_fun(k, alpha_k, S_k)
+    fit$l_pen_hat <- - opt_out$minimum / 2
     fit$Sigma_inv <- opt_out$hessian / 2
     fit$log_ml_contrib <- approx_log_ml_contrib(fit$Sigma_inv)
 

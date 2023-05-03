@@ -12,19 +12,27 @@ approx_log_ml_contrib <- function(Sigma_inv) {
 #' approx log marginal likelihood for the last fit in the list
 approx_log_ml <- function(fits) {
     fit <- fits[[length(fits)]]
+    spr <- fit$spr
     log_ml_contribs <- sapply(fits, "[[", "log_ml_contrib")
-    lprior_contribs <- sapply(fits, "[[", "lprior_hat")
+    lprior_contribs <- sapply(fits, function(x) {
+        x$lprior_fun(spr)
+    })
+    
     fit$l_hat + sum(lprior_contribs) + sum(log_ml_contribs)
 }
 
-find_lprior <- function(k, alpha_k, S_k, spr) {
+find_lprior_fun <- function(k, alpha_k, S_k) {
     r <- min(nbasis - 2, nbasis - k + 1)
     
     #' check r is correct (can eventually remove)
     r_man <- Matrix::rankMatrix(S_k)
     if(r != r_man)
         stop("rank is wrong, r is ", r, ", r_man is ", r_man)
+
+    w <- find_wiggliness_f_k(alpha_k, S_k, derivs = FALSE)
+    ldet <- log_det_gen(S_k, r)
+    lprior <- function(spr) {
+        -spr * w + r/2 * log(spr) - r/2 * log(pi) + ldet / 2
+    }
     
-    pen <- -spr * find_wiggliness_f_k(alpha_k, S_k, derivs = FALSE)
-    pen - r/2 * log(2 * pi) + 1/2 * log_det_gen(2 * spr * S_k, r)
 }
