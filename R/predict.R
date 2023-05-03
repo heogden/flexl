@@ -13,3 +13,7 @@ predict_flexl <- function(mod, newdata) {
     f0_x + colSums(u * t(f_x))
 }
 
+fitted_flexl <- function(mod, data) {
+    u_ext <- mod$u[data$c, , drop = FALSE]
+    unname(as.numeric(mod$f0_x) + rowSums(u_ext * mod$f_x))
+}

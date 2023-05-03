@@ -51,11 +51,20 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
         sigma_start <- fit_k_other_sp$sigma
     else
         sigma_start <- fit_km1$sigma
-    
-    opt_out_lsigma <- optim(sigma_start, dpen_prof_sigma, method = "L-BFGS-B",
-                            lower = 1e-6, upper = fit_km1$sigma)
 
- 
+
+    d_start <- dpen_prof_sigma(sigma_start)
+    opt_start <- storage[[1]]
+    alpha_k_start <- opt_start$estimate
+    fit_start <- update_fit_sigma(fit_km1, sigma_start)
+    fit_start <- update_fit_alpha_k(fit_start, alpha_k_start, X_k, data)
+    resid_start <- data$y - fitted_flexl(fit_start, data)
+    sigma_hat_approx <- sd(resid_start)
+
+    sigma_start_2 <- min(sd(resid_start), fit_km1$sigma)
+    
+    opt_out_lsigma <- optim(sigma_start_2, dpen_prof_sigma, method = "L-BFGS-B",
+                            lower = 1e-6, upper = fit_km1$sigma)
 
     opt_out <- storage[[which.min(sapply(storage, "[[", "minimum"))]]
     alpha_k <- opt_out$estimate
