@@ -32,6 +32,7 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
 
     counter <- 1
     dpen_prof_sigma <- function(sigma) {
+        cat(sigma, "\n")
         result <- tryCatch({
             opt_out <- optimize_alpha_k_given_sigma(sigma, sp, X_k, S_k, fit_km1, storage,
                                                     fit_k_other_sp)
@@ -51,36 +52,50 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
         sigma_start <- fit_k_other_sp$sigma
     else
         sigma_start <- fit_km1$sigma
+
+    ## d_start <- dpen_prof_sigma(sigma_start)
+    ## opt_start <- storage[[1]]
+    ## alpha_k_start <- opt_init$estimate
+    ## fit_start <- update_fit_sigma(fit_km1, sigma_start)
+    ## fit_start <- update_fit_alpha_k(alpha_k_start, k, X_k, S_k, fit_start)
+    ## resid_start <- data$y - fitted_flexl(fit_start, data)
+    ## sigma_hat_approx <- sd(resid_start)
+
+    ## sigma_start_2 <- min(sd(resid_start), fit_km1$sigma)
+    
+    ## opt_out_lsigma <- optim(sigma_start_2, dpen_prof_sigma, method = "L-BFGS-B",
+    ##                         lower = 1e-6, upper = fit_km1$sigma)
     
     opt_out_lsigma <- optim(sigma_start, dpen_prof_sigma, method = "L-BFGS-B",
                             lower = 1e-6, upper = fit_km1$sigma)
-
- 
 
     opt_out <- storage[[which.min(sapply(storage, "[[", "minimum"))]]
     alpha_k <- opt_out$estimate
     sigma_hat <- opt_out$sigma
 
-    fit_km1_sigma <- update_fit_sigma(fit_km1, sigma_hat)
-    hessian <-  attr(find_pen_deviance_k(alpha_k, sp = sp, X_k = X_k, S_k = S_k, fit_km1 = fit_km1_sigma), "hessian")
-
     rm(counter, storage)
         
     fit <- update_fit_sigma(fit_km1, sigma_hat)
+    fit <- update_fit_alpha_k(alpha_k, k, X_k, S_k, fit)
+    fit$l_hat <- find_loglikelihood_k(alpha_k, X_k, fit_km1, derivs = FALSE)
+    fit$l_pen_hat <- - opt_out$minimum / 2
+
+    
+    fit
+}
+
+update_fit_alpha_k <- function(alpha_k, k, X_k, S_k, fit) {
+    hessian <-  attr(find_pen_deviance_k(alpha_k, sp = fit$sp, X_k = X_k, S_k = S_k, fit_km1 = fit),
+                     "hessian")
     
     f_k <- X_k %*% alpha_k
     fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
     fit$alpha_k <- alpha_k
-    fit$l_hat <- find_loglikelihood_k(alpha_k, X_k, fit_km1, derivs = FALSE)
-    fit$spr <- sp / (2  * sigma_hat^2)
     fit$lprior_fun <-  find_lprior_fun(k, alpha_k, S_k)
-    fit$l_pen_hat <- - opt_out$minimum / 2
     fit$Sigma_inv <- hessian / 2
     fit$log_ml_contrib <- approx_log_ml_contrib(fit$Sigma_inv)
-
     fit$f_x <- cbind(fit$f_x, f_k)
-    fit$u <- find_u_hat(sigma_hat, data, fit$f0_x, fit$f_x)
-
+    fit$u <- find_u_hat(fit$sigma, data, fit$f0_x, fit$f_x)
 
     fit
 }
