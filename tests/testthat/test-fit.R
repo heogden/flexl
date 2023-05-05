@@ -60,3 +60,18 @@ test_that("sensible fit for test data 2 (not straight lines)", {
         geom_line(aes(y = eta), linetype = "dashed") +
         facet_wrap(vars(c))
 })
+
+test_that("fits to exercise data", {
+    library(ALA)
+    library(tidyverse)
+    
+    data <-  exercise %>%
+        as_tibble %>%
+        mutate(c = as.integer(as.factor(id)),
+               x = day,
+               y = strength,
+               .keep = "none")
+
+    mod <- fit_flexl(data)
+})
+
