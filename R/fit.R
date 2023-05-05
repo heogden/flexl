@@ -1,4 +1,8 @@
 fit_flexl <- function(data, nbasis = 10) {
+    if(any(is.na(data)))
+        stop("There are missing values in the data, which flexl cannot handle")
+    
+    
     lsp_poss <- seq(-5, 10, length.out = 10)
     sp_poss <- exp(lsp_poss)
 

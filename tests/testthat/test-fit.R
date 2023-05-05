@@ -61,7 +61,7 @@ test_that("sensible fit for test data 2 (not straight lines)", {
         facet_wrap(vars(c))
 })
 
-test_that("fits to exercise data", {
+test_that("error if data has missing values", {
     library(ALA)
     library(tidyverse)
     
@@ -72,6 +72,7 @@ test_that("fits to exercise data", {
                y = strength,
                .keep = "none")
 
-    mod <- fit_flexl(data)
+    expect_error(fit_flexl(data), "missing values")
+
 })
 
