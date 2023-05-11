@@ -74,21 +74,24 @@ test_that("can fit normal model with fixed k and penalty pars", {
 })
 
 test_that("can fit with full-loglikelihood stage", {
-    data_full <- generate_test_data_1()
+    data_full <- generate_test_data_2()
     data <- data_full$data
     mu <- data_full$mu
     delta <- data_full$delta
     eta <- data_full$eta
+    eta_fun <- data_full$eta_fun
 
     nbasis <- 10
     k <- 2
-    sp <- 100
+    sp <- 0
     
     mod <- fit_given_sp(data, sp, k, nbasis, full = TRUE)
     mod_not_full <- fit_given_sp(data, sp, k, nbasis, full = FALSE)
 
-    pred_data <- bind_cols(x = data$x, c = data$c, eta = eta) %>%
+    pred_data <- crossing(x = seq(min(data$x), max(data$x), length.out = 50),
+                          c = unique(data$c)) %>%
         group_by(c) %>%
+        mutate(eta = eta_fun(x, c[1])) %>%
         mutate(eta_hat_full = predict_flexl(mod[[k+1]], newdata = list(x = x, c = c[1])),
                eta_hat_not_full = predict_flexl(mod_not_full[[k+1]], newdata = list(x = x, c = c[1])))
 
