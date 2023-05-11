@@ -85,6 +85,7 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
     fit$l_pen_hat <- - opt_out$minimum / 2
     fit$Sigma_inv <- hessian / 2
     fit$log_ml_contrib <- approx_log_ml_contrib(fit$Sigma_inv)
+    fit$k <- k
 
     fit
 }
@@ -92,6 +93,7 @@ optimize_sigma_k <- function(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp) {
 update_fit_alpha_k <- function(fit, alpha_k, X_k, data) {
     f_k <- X_k %*% alpha_k
     fit$cluster_info <- lapply(fit$cluster_info, update_cluster_info, f_k = f_k)
+    fit$alpha <- c(fit$alpha, alpha_k)
     fit$alpha_k <- alpha_k
     fit$f_x <- cbind(fit$f_x, f_k)
     fit$u <- find_u_hat(fit$sigma, data, fit$f0_x, fit$f_x)

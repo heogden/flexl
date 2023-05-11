@@ -72,3 +72,43 @@ test_that("can fit normal model with fixed k and penalty pars", {
     facet_wrap(vars(c))
     
 })
+
+test_that("can fit with full-loglikelihood stage", {
+    data_full <- generate_test_data_1()
+    data <- data_full$data
+    mu <- data_full$mu
+    delta <- data_full$delta
+    eta <- data_full$eta
+
+    nbasis <- 10
+    k <- 2
+    sp <- 100
+    
+    mod <- fit_given_sp(data, sp, k, nbasis, full = TRUE)
+    mod_not_full <- fit_given_sp(data, sp, k, nbasis, full = FALSE)
+
+    pred_data <- bind_cols(x = data$x, c = data$c, eta = eta) %>%
+        group_by(c) %>%
+        mutate(eta_hat_full = predict_flexl(mod[[k+1]], newdata = list(x = x, c = c[1])),
+               eta_hat_not_full = predict_flexl(mod_not_full[[k+1]], newdata = list(x = x, c = c[1])))
+
+    pred_data_long <- pred_data %>%
+        pivot_longer(cols = starts_with("eta_hat_"), names_prefix = "eta_hat_", names_to = "type",
+                     values_to = "eta_hat") 
+    
+    error_type <- pred_data_long %>%
+        group_by(type) %>%
+        mutate(se = (eta_hat - eta)^2) %>%
+        summarise(rmse = sqrt(mean(se)))
+
+    expect_lte(error_type$rmse[1], error_type$rmse[2])
+
+    pred_data_long %>%
+        filter(c <= 12) %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = eta_hat, colour = type)) +
+        geom_line(aes(y = eta), linetype = "dashed") +
+        geom_point(aes(x = x, y = y), data = (data %>% filter(c <= 12))) +
+        facet_wrap(vars(c))
+    
+})
