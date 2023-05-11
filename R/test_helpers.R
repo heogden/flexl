@@ -23,8 +23,16 @@ generate_test_data_1 <- function() {
     
     lambda <- c(0.5, 0.1)
     K <- length(lambda)
-    alpha <- as.numeric(t(sapply(lambda, function(lambda_i){rnorm(d, sd = sqrt(lambda_i))})))
+    alpha_mat <- t(sapply(lambda, function(lambda_i){rnorm(d, sd = sqrt(lambda_i))}))
+    alpha <- as.numeric(alpha_mat)
     eta <-  m + as.numeric(Z %*% alpha)
+
+    eta_fun <- function(x, c) { 
+        Z <- delta(x)
+        mu(x) + as.numeric(Z %*% alpha_mat[,c])
+    }
+    
+
 
     sigma <- 0.1
     y <- eta + rnorm(n, sd = sigma)
@@ -32,7 +40,8 @@ generate_test_data_1 <- function() {
     list(data = data.frame(c = c, x = x, y = y),
          mu = mu,
          delta = delta,
-         eta = eta)
+         eta = eta,
+         eta_fun = eta_fun)
 }
 
 generate_test_data_2 <- function() {

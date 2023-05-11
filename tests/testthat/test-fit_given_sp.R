@@ -74,7 +74,7 @@ test_that("can fit normal model with fixed k and penalty pars", {
 })
 
 test_that("can fit with full-loglikelihood stage", {
-    data_full <- generate_test_data_2()
+    data_full <- generate_test_data_1()
     data <- data_full$data
     mu <- data_full$mu
     delta <- data_full$delta
