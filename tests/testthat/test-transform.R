@@ -63,24 +63,6 @@ test_that("can differentiate transform", {
     dH1_man <- numDeriv::jacobian(find_H1, beta)
 
 
-    find_dH1_loop <- function(beta) {
-        n <- nrow(beta)
-        u <- find_u(beta)
-        gamma <- 2 / sum(u^2)
-        du <- diag(nrow = n, ncol = n)
-        beta_norm <- sqrt(sum(beta^2))
-        du[1,] <- du[1,] - beta/beta_norm
-        dgamma <- as.numeric(-gamma^2 * crossprod(du, u))
-
-        dH1 <- array(NA, dim = c(n, n, n))
-
-        for(i in 1:n)
-            for(j in 1:n)
-                dH1[i, j, ] <- - dgamma * u[i] * u[j]  - gamma * (du[i,] * u[j] + u[i] * du[j,])
-
-        dH1     
-    }
-
     find_dH1 <- function(beta) {
         n <- nrow(beta)
         u <- find_u(beta)
@@ -95,14 +77,11 @@ test_that("can differentiate transform", {
         -outer(uut, dgamma) - gamma * (outer(u, du) + aperm(outer(u, du), c(2, 1, 3)))
     }
 
+
+    dH1 <- find_dH1(beta),
+ 
     
-    b <- bench::mark(
-                    dH1 <- find_dH1(beta),
-                    dH1_loop <- find_dH1_loop(beta)
-                )
-    b
-    
-       expect_equal(as.numeric(dH1), as.numeric(dH1_man), tolerance = 1e-4)
+    expect_equal(as.numeric(dH1), as.numeric(dH1_man), tolerance = 1e-4)
 
     
     T_ij <- function(beta) {
