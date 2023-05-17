@@ -95,8 +95,10 @@ test_that("can differentiate transform", {
     expect_equal(dbeta2_alpha1, dbeta2_alpha1_man)
 
     #' Now try to do this directly, based on
-    #' B.5 of Wood2017
-    f1 <- function(x, beta_1) {
+    #' B.5 of Wood2017:
+    #' f1(beta_1, x) = H1 x,
+    #' H1 is Householder transform of beta_1.
+    f1 <- function(beta_1, x) {
         beta_1_norm <- sqrt(sum(beta_1^2))
         u <- beta_1
         u[1] <- beta_1[1] - beta_1_norm
@@ -104,7 +106,45 @@ test_that("can differentiate transform", {
         delta <- sum(u * x)
         x - delta * gamma * u
     }
-    alpha_2_star <- c(0, alpha_2)
-    expect_equal(f1(alpha_2_star, alpha_1), as.numeric(beta_2))
+    expect_equal(f1(alpha_1, c(0, alpha_2)), as.numeric(beta_2))
+
+    #' To calculate derivatives of f1 with respect to beta_1
+    #' could store u, gamma, delta and derivs,
+    #' then can calculate f1 and deriv wrt beta_1 for different x quickly.
+    df1 <- function(beta_1, x) {
+        beta_1_norm <- sqrt(sum(beta_1^2))
+        u <- beta_1
+        u[1] <- beta_1[1] - beta_1_norm
+        gamma <- 2 / sum(u^2)
+        delta <- sum(u * x)
+        
+        du <- diag(nrow = n, ncol = n)
+        du[1,] <- du[1,] - beta_1/beta_1_norm
+        dgamma <- as.numeric(-gamma^2 * crossprod(du, u))
+        ddelta <- crossprod(du, x)
+        
+        - gamma * tcrossprod(u, ddelta) - delta * tcrossprod(u, dgamma) - delta * gamma * du
+    }
+
+    beta_1 <- alpha_1
+    expect_equal(df1(beta_1, c(0, alpha_2)), dbeta2_alpha1)
+
+    find_df1_direct <- function(beta_1, alpha_2) {
+        dH1 <- find_dH1(matrix(beta_1, ncol = 1))
+        dT <- dH1[, -1, ]
+        dbeta2_alpha1 <- matrix(nrow = nbasis, ncol = nbasis)
+        for(i in 1:nbasis)
+            for(j in 1:nbasis)
+                dbeta2_alpha1[i,j] <- sum(dT[i,,j] * alpha_2)
+        dbeta2_alpha1
+    }
+    
+        
+    bench::mark(
+               df1(beta_1, c(0, alpha_2)),
+               find_df1_direct(beta_1, alpha_2)
+               )
+               
+
     
 })
