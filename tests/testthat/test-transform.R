@@ -52,22 +52,9 @@ test_that("can differentiate transform", {
     
     expect_equal(as.numeric(dH1), as.numeric(dH1_man))
 
-    
-    T_ij <- function(beta) {
-        find_orthogonal_complement_transform(beta)[i, j]
-    }
-
-    
-    dT_man <- array(NA, dim = c(dim(T), nbasis))
-    
-    for(i in 1:nrow(T))
-        for(j in 1:ncol(T))
-            dT_man[i, j, ] <- numDeriv::grad(T_ij, beta)
-
-    #' can we recover this automatically?
-    numDeriv::jacobian(find_orthogonal_complement_transform, beta)
-    
-    d_qr_out <- p_q(beta)
-
-    d_qr_out[,,,1]
+   
+    dT_man <- numDeriv::jacobian(find_orthogonal_complement_transform, beta)
+    dT <- dH1[, -1, ]
+    expect_equal(as.numeric(dT), as.numeric(dT_man))
+ 
 })
