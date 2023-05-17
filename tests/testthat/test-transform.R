@@ -93,4 +93,18 @@ test_that("can differentiate transform", {
 
     dbeta2_alpha1_man <- dbeta2_man[,1:nbasis]
     expect_equal(dbeta2_alpha1, dbeta2_alpha1_man)
+
+    #' Now try to do this directly, based on
+    #' B.5 of Wood2017
+    f1 <- function(x, beta_1) {
+        beta_1_norm <- sqrt(sum(beta_1^2))
+        u <- beta_1
+        u[1] <- beta_1[1] - beta_1_norm
+        gamma <- 2 / sum(u^2)
+        delta <- sum(u * x)
+        x - delta * gamma * u
+    }
+    alpha_2_star <- c(0, alpha_2)
+    expect_equal(f1(alpha_2_star, alpha_1), as.numeric(beta_2))
+    
 })
