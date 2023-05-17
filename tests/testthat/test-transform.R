@@ -24,6 +24,86 @@ test_that("can differentiate transform", {
     H1 <- diag(nrow = n, ncol = n) - gamma * tcrossprod(u)
 
     expect_equal(H1, Q)
+
+    find_u <- function(beta) {
+         beta_norm <- sqrt(sum(beta^2))
+         n <- nrow(beta)
+         e1 <- c(1, rep(0, n-1))
+         u <- beta - beta_norm * e1
+    }
+    
+
+    du_man <- numDeriv::jacobian(find_u, beta)
+
+    du <- diag(nrow = n, ncol = n)
+    du[1,] <- du[1,] - beta/beta_norm
+
+    expect_equal(du, du_man)
+
+    find_gamma <- function(beta) {
+        u <- find_u(beta)
+        2 / sum(u^2)
+    }
+
+
+    dgamma_man <- numDeriv::grad(find_gamma, beta)
+    
+    dgamma <- as.numeric(-gamma^2 * crossprod(du, u))
+
+    expect_equal(dgamma, dgamma_man)
+
+    
+    find_H1 <- function(beta) {
+        u <- find_u(beta)
+        gamma <- 2 / sum(u^2)
+        diag(nrow = n, ncol = n) - gamma * tcrossprod(u)
+    }
+    
+
+    dH1_man <- numDeriv::jacobian(find_H1, beta)
+
+
+    find_dH1_loop <- function(beta) {
+        n <- nrow(beta)
+        u <- find_u(beta)
+        gamma <- 2 / sum(u^2)
+        du <- diag(nrow = n, ncol = n)
+        beta_norm <- sqrt(sum(beta^2))
+        du[1,] <- du[1,] - beta/beta_norm
+        dgamma <- as.numeric(-gamma^2 * crossprod(du, u))
+
+        dH1 <- array(NA, dim = c(n, n, n))
+
+        for(i in 1:n)
+            for(j in 1:n)
+                dH1[i, j, ] <- - dgamma * u[i] * u[j]  - gamma * (du[i,] * u[j] + u[i] * du[j,])
+
+        dH1     
+    }
+
+    find_dH1 <- function(beta) {
+        n <- nrow(beta)
+        u <- find_u(beta)
+        gamma <- 2 / sum(u^2)
+        du <- diag(nrow = n, ncol = n)
+        beta_norm <- sqrt(sum(beta^2))
+        du[1,] <- du[1,] - beta/beta_norm
+        dgamma <- as.numeric(-gamma^2 * crossprod(du, u))
+
+        uut <- tcrossprod(u)
+        u <- as.numeric(u)
+        -outer(uut, dgamma) - gamma * (outer(u, du) + aperm(outer(u, du), c(2, 1, 3)))
+    }
+
+    
+    b <- bench::mark(
+                    dH1 <- find_dH1(beta),
+                    dH1_loop <- find_dH1_loop(beta)
+                )
+    b
+    
+       expect_equal(as.numeric(dH1), as.numeric(dH1_man), tolerance = 1e-4)
+
     
     T_ij <- function(beta) {
         find_orthogonal_complement_transform(beta)[i, j]
