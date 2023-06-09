@@ -121,7 +121,8 @@ test_that("can differentiate transform", {
         u[1] <- beta_1[1] - beta_1_norm
         gamma <- 2 / sum(u^2)
         delta <- sum(u * x)
-        
+
+        n <- length(beta_1)
         du <- diag(nrow = n, ncol = n)
         du[1,] <- du[1,] - beta_1/beta_1_norm
         dgamma <- as.numeric(-gamma^2 * crossprod(du, u))
@@ -133,8 +134,52 @@ test_that("can differentiate transform", {
     beta_1 <- alpha_1
     expect_equal(df1(beta_1, c(0, alpha_2)), dbeta2_alpha1)
 
-
+    dbeta3_alpha_2_man <- dbeta_man[beta_id == 3, alpha_id == 2]
+    dbeta3_alpha_1_man <- dbeta_man[beta_id == 3, alpha_id == 1]
                
+    alpha_3 <- alpha[alpha_id == 3]
 
+    f2 <- function(beta_1, beta_2, x) {
+        x2 <- f1(beta_1, x)
+        c(x2[1], f1(beta_2[-1], x2[-1]))
+    }
     
-})
+    
+    f2(beta[,1], beta[,2], c(0, 0, alpha_3))
+    beta[,3]
+    #' not yet working
+
+    H_12 <- find_H1(beta[-1, 2, drop = FALSE])
+    H_2 <- rbind(0, cbind(0, H_12))
+    H_2[1,1] <- 1
+
+    H_1 <- find_H1(beta[, 1, drop = FALSE])
+
+    as.numeric(H_2 %*% (H_1 %*% c(0, 0, alpha_3)))
+    #' same as f_2(...), but not same as beta[,3]
+
+    n <- length(beta_1)
+    H_13 <- find_H1(beta[-c(1,2), 3, drop = FALSE])
+    H_3 <- diag(nrow = n, ncol = n)
+    H_3[-c(1,2), -c(1, 2)] <- H_13
+
+    H_3 %*% (H_2 %*% (H_1 %*% beta))
+    #' does not have correct upper triangular form
+    #' something is going wrong here
+
+    step1 <- H_1 %*% beta
+    #' meets requirement that have zeroes on first col, except first element
+    step2 <- H_2 %*% step1
+    #' does **not** meet the requirement that second element of second column unchanged
+    #' and everything beyond the second element is zeroed.
+
+    #' create H2 based on step1 instead of beta?
+    H_12 <- find_H1(step1[-1, 2, drop = FALSE])
+    H_2 <- rbind(0, cbind(0, H_12))
+    H_2[1,1] <- 1
+
+    step2 <- H_2 %*% step1
+    #' now sets everything beyond second element to zero
+    #' but something still wrong: second element should be same as in step1
+    step1[2,2]
+    step2[2,2]
