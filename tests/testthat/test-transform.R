@@ -67,6 +67,13 @@ test_that("can differentiate transform", {
     alpha <- rnorm(sum(n_alpha_each))
     beta <- find_beta_from_alpha(alpha, nbasis, k)
 
+
+    A <- qr(beta)
+    k <- ncol(beta)
+    Q <- qr.Q(A, complete = TRUE)
+    R <- qr.R(A, complete = TRUE)
+    T <- Q[,-(1:k)]
+    
     #' this is what we want to end up with
     dbeta_man <- numDeriv::jacobian(find_beta_from_alpha, alpha, nbasis = nbasis, k = k)
     #' (can ignore first nbasis elements, giving alpha_0, they just control beta_0)
@@ -179,7 +186,41 @@ test_that("can differentiate transform", {
     H_2[1,1] <- 1
 
     step2 <- H_2 %*% step1
-    #' now sets everything beyond second element to zero
-    #' but something still wrong: second element should be same as in step1
-    step1[2,2]
-    step2[2,2]
+    #' now sets everything beyond second element of second column to zero
+    #' amd the first row is unchanged
+
+    expect_equal(step1[,2], c(0, alpha_2))
+
+    
+    H_13 <- find_H1(step2[-c(1, 2), 3, drop = FALSE])
+    H_3 <- rbind(0, 0, cbind(0, 0, H_13))
+    H_3[1, 1] <- 1
+    H_3[2, 2] <- 1
+
+    step3 <- H_3 %*% step2
+
+    Q_my <- H_1 %*% H_2 %*% H_3
+    R_my <- step3
+    R_my_nonzero <- R_my[1:ncol(R_my), ]
+
+    expect_equal(Q_my %*% R_my, beta)
+    expect_equal(crossprod(Q_my), diag(nrow = nrow(beta))) # Q is orthogonal
+    expect_true(all(abs(R_my_nonzero[row(R_my_nonzero) < col(R_my_nonzero)]) < 1e-8))
+                                        # Upper part of R is upper triangular
+
+    
+    T_my <- Q_my[,-(1:k)]
+    ## T is different from T_my: we have a different transformation,
+    ## both come from QR decompositions, but there are multiple possible choices
+
+    k <- 3
+    n_alpha_each <- c(nbasis, nbasis - 0:(k-1))
+    alpha <- rnorm(sum(n_alpha_each))
+    beta3 <- find_beta_from_alpha(alpha, nbasis, k)
+    beta2 <- beta3[,1:2]
+
+    ## Idea, we form transformation by repeated finding of Householder reflections
+    ## Can we take H_1 and H_2 from beta2 in use to find tranform for beta3?
+    ## Yes: because H_1 depends only on first column of beta, same for beta2 and beta3
+}
+
