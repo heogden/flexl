@@ -19,27 +19,7 @@ find_loglikelihood <- function(alpha, sigma, y, X, row_list, nbasis, k) {
     sum(l_contribs)
 }
 
-split_alpha <- function(alpha, nbasis, k) {
-    if(k == 0)
-        n_each <- nbasis
-    else
-        n_each <- c(nbasis, nbasis - 0:(k-1))
-    component <- rep(0:k, times = n_each)
-    split(alpha, component)
-}
 
-find_beta <- function(alpha_split) {
-    alpha <- alpha_split[-1]
-    beta <- matrix(alpha[[1]], ncol = 1)
-    if(length(alpha) > 1) {
-        for(j in 2:length(alpha)) {
-            transform <- find_orthogonal_complement_transform(beta)
-            beta_j <- transform %*% alpha[[j]]
-            beta <- cbind(beta, beta_j)
-        }
-    }
-    beta
-}
 
 find_pen_deviance <- function(par, sp, y, X, row_list, nbasis, k, basis) {
     cat("par = ", par, "\n")
