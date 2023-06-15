@@ -18,10 +18,7 @@ find_beta <- function(alpha_split) {
 }
 
 find_alpha_components <- function(nbasis, k) {
-    if(k == 0)
-        n_each <- nbasis
-    else
-        n_each <- c(nbasis, nbasis - 0:(k-1))
+    n_each <- c(nbasis, nbasis - 0:(k-1))
     component <- rep(0:k, times = n_each)
 }
 
@@ -39,6 +36,30 @@ find_Hi <- function(alpha_i) {
 }
 
 
-find_beta <- function(alpha, nbasis, k) {
+find_beta_i <- function(alpha_i, H_1_to_im1) {
+    beta_i <- alpha_i
+    for(j in rev(seq_along(H_1_to_im1)))
+        beta_i <- find_H0x(H_1_to_im1[[j]], beta_i)
+     
+    beta_i
     
 }
+
+find_beta <- function(alpha, nbasis, k) {
+    component <- find_alpha_components(nbasis, k)
+    H_list <- list()
+    beta <- matrix(nrow = nbasis, ncol = k)
+    for(i in 1:k) {
+        alpha_i <- alpha[component == i]
+        if(i == 1)
+            beta[,i] <- alpha_i
+        else
+            beta[,i] <- find_beta_i(alpha_i, H_list)
+       
+        H_list[[i]] <- find_Hi(alpha_i)
+    }
+    beta
+}
+
+
+
