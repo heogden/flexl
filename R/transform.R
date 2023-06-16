@@ -19,7 +19,7 @@ find_beta <- function(alpha_split) {
 
 find_alpha_components <- function(nbasis, k) {
     n_each <- nbasis - 0:(k-1)
-    component <- rep(1:k, times = n_each)
+    rep(1:k, times = n_each)
 }
 
 
@@ -41,8 +41,6 @@ find_Hstar <- function(alpha) {
     gamma <- 2 / t
     dgamma <- - 2 * dt / t^2
     
-    a <- sum(u[-1] * x)
-
     n <- length(alpha)
     du <- diag(nrow = n)
     du[1,] <- du[1,] - alpha / alpha_norm
