@@ -30,26 +30,37 @@ split_alpha <- function(alpha, nbasis, k) {
 
 find_Hstar <- function(alpha) {
     alpha_norm <- sqrt(sum(alpha^2))
-    
-    t <- alpha_norm * (alpha_norm - alpha[1])
-    dt <- 2 * (1 - alpha[1]) / alpha_norm * alpha
-    dt[1] <- dt[1] - alpha_norm
-    
-    gamma <- 1 / t
-    dgamma <- - dt / t^2
 
     u <- alpha
     u[1] <- u[1] - alpha_norm
+
+    t <- sum(u^2)
+    dt <- 4 * alpha - 2 * alpha[1] * alpha / alpha_norm
+    dt[1] <- dt[1] - 2 * alpha_norm
     
-    list(alpha = alpha,
-         u = u, gamma = gamma,
+    gamma <- 2 / t
+    dgamma <- - 2 * dt / t^2
+    
+    a <- sum(u[-1] * x)
+
+    n <- length(alpha)
+    du <- diag(nrow = n)
+    du[1,] <- du[1,] - alpha / alpha_norm
+
+    M <- outer(u, dgamma) + gamma * du
+    
+    list(u = u, gamma = gamma,
          M = M)
 }
 
 #' also return derivatives wrt alpha, if requested
-find_Hstarx <- function(H, x, derivs = TRUE) {
+find_Hstar_x <- function(Hstar, x, deriv = TRUE) {
     a <- sum(Hstar$u[-1] * x)
-    result <- c(0, x) - a * H_star$gamma * H_star$u
+    result <- c(0, x) - a * Hstar$gamma * Hstar$u
+    if(deriv)
+        attr(result, "gradient") <- - Hstar$gamma * outer(Hstar$u, c(0, x)) - a * Hstar$M
+
+    result
 }
 
 
