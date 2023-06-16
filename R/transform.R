@@ -62,56 +62,63 @@ as_matrix_Hstar <- function(Hstar) {
 }
 
 
-find_Hstar_x <- function(Hstar, x, deriv = TRUE) {
+find_Hstar_x <- function(Hstar, x) {
     a <- sum(Hstar$u[-1] * x)
-    result <- c(0, x) - a * Hstar$gamma * Hstar$u
-    if(deriv)
-        attr(result, "gradient") <- - Hstar$gamma * outer(Hstar$u, c(0, x)) - a * Hstar$M
-
-    result
+    list(value = c(0, x) - a * Hstar$gamma * Hstar$u,
+         gradient = - Hstar$gamma * outer(Hstar$u, c(0, x)) - a * Hstar$M)
 }
 
 
 
-find_beta_i <- function(alpha_i, Hstar_1_to_im1, P_1_to_im1) {
-    step_j <- alpha_i
+find_beta_i <- function(alpha_i, Hstar_list, P_list) {
 
-    i <- length(H_1_to_im1) + 1
-    derivs <- P_1_to_im1[[i - 1]]
+    i <- length(Hstar_list) + 1
+
+    gradients <- list()
+    gradients[[i]] <- P_list[[i - 1]]
+
+    s_j <- list(value = alpha_i)
     
-    for(j in rev(seq_along(H_1_to_im1))) {
-        ## update: step_j <- H_j %*% (step_j)
-        ## need to modify find_H0x so it also finds deriv of this wrt alpha_j
-        derivs <- P_1_to_im1[[j]] %*% step_j$deriv
-        step_j <- find_H0x(H_1_to_im1[[j]], step_j$value)
+    for(j in (i-1):1) {
+        s_j <- find_Hstar_x(Hstar_list[[j]], s_j$value)
+        if(j == 1)
+            gradients[[j]] <- s_j$gradient
+        else
+            gradients[[j]] <- P_list[[j - 1]] %*% s_j$gradient
     }
     
-    list(value = step_j$value,
-         deriv = unlist(derivs))
+    list(value = s_j$value,
+         gradient = Reduce(cbind, gradients))
 }
 
 find_beta <- function(alpha, nbasis, k) {
     component <- find_alpha_components(nbasis, k)
     Hstar_list <- list()
-    ##beta <- matrix(nrow = nbasis, ncol = k)
-    beta <- list()
+    P_list <- list()
+    beta <- matrix(nrow = nbasis, ncol = k)
+    gradient <- array(0, dim = c(nbasis, length(component), k)) 
+        
     for(i in 1:k) {
         alpha_i <- alpha[component == i]
         if(i == 1)
-            beta[[i]] <- list(value = alpha_i, derivs = list(diag(nrow = length(alpha_i))))
+            beta_i <- list(value = alpha_i, gradient = diag(nrow = length(alpha_i)))
         else
-            beta[[i]] <- find_beta_i(alpha_i, Hstar_list, P_list)
-       
+            beta_i <- find_beta_i(alpha_i, Hstar_list, P_list)
+
+        beta[,i] <- beta_i$value
+        gradient[, (component <= i), i] <- beta_i$gradient
+        
         Hstar_list[[i]] <- find_Hstar(alpha_i)
        
-        Hstar_i_mat <- as_matrix_Hstar(H_list[[i]])
+        Hstar_i_mat <- as_matrix_Hstar(Hstar_list[[i]])
         if(i == 1)
             P_list[[i]] <-  Hstar_i_mat
         else
             P_list[[i]] <- P_list[[i-1]] %*% Hstar_i_mat
         
     }
-    beta
+    list(value = beta,
+         gradient = gradient)
 }
 
 
