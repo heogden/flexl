@@ -53,7 +53,15 @@ find_Hstar <- function(alpha) {
          M = M)
 }
 
-#' also return derivatives wrt alpha, if requested
+as_matrix_Hstar <- function(Hstar) {
+    u <- Hstar$u
+    gamma <- Hstar$gamma
+
+    H <- diag(nrow = length(u)) - gamma * outer(u, u)
+    H[ , -1, drop = FALSE]
+}
+
+
 find_Hstar_x <- function(Hstar, x, deriv = TRUE) {
     a <- sum(Hstar$u[-1] * x)
     result <- c(0, x) - a * Hstar$gamma * Hstar$u
@@ -64,15 +72,8 @@ find_Hstar_x <- function(Hstar, x, deriv = TRUE) {
 }
 
 
-find_Hi <- function(alpha_i) {
-    u <- alpha_i
-    alpha_i_norm <- sqrt(sum(alpha_i^2))
-    u[1] <- u[1] - alpha_i_norm
-    new_Householder(u)
-}
 
-
-find_beta_i <- function(alpha_i, H_1_to_im1, P_1_to_im1) {
+find_beta_i <- function(alpha_i, Hstar_1_to_im1, P_1_to_im1) {
     step_j <- alpha_i
 
     i <- length(H_1_to_im1) + 1
@@ -91,7 +92,7 @@ find_beta_i <- function(alpha_i, H_1_to_im1, P_1_to_im1) {
 
 find_beta <- function(alpha, nbasis, k) {
     component <- find_alpha_components(nbasis, k)
-    H_list <- list()
+    Hstar_list <- list()
     ##beta <- matrix(nrow = nbasis, ncol = k)
     beta <- list()
     for(i in 1:k) {
@@ -99,15 +100,15 @@ find_beta <- function(alpha, nbasis, k) {
         if(i == 1)
             beta[[i]] <- list(value = alpha_i, derivs = list(diag(nrow = length(alpha_i))))
         else
-            beta[[i]] <- find_beta_i(alpha_i, H_list, P_list)
+            beta[[i]] <- find_beta_i(alpha_i, Hstar_list, P_list)
        
-        H_list[[i]] <- find_Hi(alpha_i)
+        Hstar_list[[i]] <- find_Hstar(alpha_i)
        
-        Hi_mat <- as.matrix.Householder(H_list[[i]])
+        Hstar_i_mat <- as_matrix_Hstar(H_list[[i]])
         if(i == 1)
-            P_list[[i]] <-  Hi_mat
+            P_list[[i]] <-  Hstar_i_mat
         else
-            P_list[[i]] <- P_list[[i-1]] %*% Hi_mat
+            P_list[[i]] <- P_list[[i-1]] %*% Hstar_i_mat
         
     }
     beta
