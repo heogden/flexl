@@ -39,23 +39,31 @@ find_par0 <- function(fit_km1, k, nbasis) {
 find_fit_info <- function(par, k, basis) {
     par_split <- split_par(par, basis$nbasis)
 
+
+    f0_x <- basis$X %*% par_split$beta0
     f0 <- find_spline_fun(par_split$beta0, basis)
+    
 
     if(k > 0) {
         beta <- find_beta(par_split$alpha, basis$nbasis, k)$value
+        f_x <- basis$X %*% beta
+        u_hat <- find_u_hat(exp(par_split$lsigma), data, f0_x, f_x)
         f <- find_spline_fun(beta, basis)
     } else {
         f <- NULL
+        u_hat <- NULL
     }
 
-    list(par = par,
+    list(k = k,
+         par = par,
          beta0 = par_split$beta0,
          alpha = par_split$alpha,
          lsigma = par_split$lsigma,
          beta = beta,
          sigma = exp(par_split$lsigma),
          f0 = f0,
-         f = f)
+         f = f,
+         u_hat = u_hat)
     
     
     
