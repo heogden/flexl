@@ -8,7 +8,7 @@ test_that("Transform gives orthogonal columns", {
     set.seed(1)
     alpha <- rnorm(length(components))
 
-    beta <- find_beta(alpha, nbasis, k)
+    beta <- find_beta(alpha, nbasis, k)$value
 
     expect_equal(sum(beta[,2] * beta[,1]), 0)
     expect_equal(sum(beta[,3] * beta[,1]), 0)

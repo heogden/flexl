@@ -1,22 +1,3 @@
-find_orthogonal_complement_transform <- function(beta) {
-    A <- qr(beta)
-    k <- ncol(beta)
-    qr.Q(A, complete = TRUE)[,-(1:k)]
-}
-
-find_beta <- function(alpha_split) {
-    alpha <- alpha_split[-1]
-    beta <- matrix(alpha[[1]], ncol = 1)
-    if(length(alpha) > 1) {
-        for(j in 2:length(alpha)) {
-            transform <- find_orthogonal_complement_transform(beta)
-            beta_j <- transform %*% alpha[[j]]
-            beta <- cbind(beta, beta_j)
-        }
-    }
-    beta
-}
-
 find_alpha_components <- function(nbasis, k) {
     n_each <- nbasis - 0:(k-1)
     rep(1:k, times = n_each)

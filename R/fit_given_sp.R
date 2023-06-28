@@ -1,26 +1,19 @@
+#' @param data a data frame
 #' @param sp the smoothing parameter
-#' @param sigma the standard deviation of the normal errors
 #' @param kmax the maximum number of variation functions to use
 #' @param nbasis the number of spline basis functions to use
-fit_given_sp <- function(data, sp, kmax, nbasis, fve_threshold = 1, fit_other_sp = NULL,
-                         full = FALSE) {
+#' @param fve_threshold the threshold on fraction of variation explained, used to choose the number of variation functions
+fit_given_sp <- function(data, sp, kmax, nbasis, fve_threshold = 1) {
     #' find the basis to use
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
     fits <- list()
     #' fit the mean-only model (k = 0)
     fits[[1]] <- fit_0(data, sp, basis)
-    fits[[1]]$log_ml <- approx_log_ml(fits)
     
     #' fit with k variation functions, fixing mean and first k-1 functions
     if(kmax > 0) {
         for(k in 1:kmax) {
-            if(!is.null(fit_other_sp))
-                fit_k_other_sp <- fit_other_sp[[k+1]]
-            else
-                fit_k_other_sp <- NULL
-            
-            fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis, fit_k_other_sp, full)
-            fits[[k+1]]$log_ml <- approx_log_ml(fits)
+            fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis)
             if(find_FVE(fits)[k] > fve_threshold)
                 break
         }
@@ -38,55 +31,36 @@ find_FVE <- function(fits) {
 
 
 #' @param k the number of variation functions to use 
-fit_given_k <- function(data, sp, k, fit_km1, basis, fit_k_other_sp, full) {
-    nbasis <- nrow(basis$S)
-    
-    if(k > 1) {
-        #' find basis for orthogonal complement of beta_1, ..., beta_{k-1}
-        transform <- find_orthogonal_complement_transform(fit_km1$beta)
-            
-        #' pre-compute "transformed" spline basis:
-        X_k <- basis$X %*% transform
-        S_k <- emulator::quad.form(basis$S, transform)
-        
-    } else {
-        #' no restrictions needed on beta_1
-        X_k <- basis$X
-        S_k <- basis$S
+fit_given_k <- function(data, sp, k, fit_km1, basis) {
+
+    if(k == 0)
+        opt <- fit_0(data, sp, basis)
+    else {
+        #' TODO: write find_par0 to add in extra zeroes
+        #' for alpha_k
+        par0 <- find_par0(fit_km1$par, k, basis$nbasis)
+
+        #' TODO: redo find_pen_deviance to take these
+        #' arguments only
+        #' The parameter in find_pen_deviance
+        #' should contain alpha0, alpha, lsigma
+        opt <- nlm(par0, find_pen_deviance, sp = sp,
+                   y = data$y, basis = basis)
     }
     
-    #' optimize loglikelihood for sigma and alpha_k, keeping f_0, f_1, .., f_{k-1} (and sigma) fixed
-    fit <- optimize_sigma_k(sp, k, X_k, S_k, fit_km1, data, fit_k_other_sp)
 
-
-    if(full) {
-        par0 <- c(fit$alpha, fit$sigma)
-        row_list <- lapply(fit_km1$cluster_info, "[[", "rows")
-
-        opt_out <- optim(par0, find_pen_deviance, sp = sp, y = data$y, X = basis$X,
-                         row_list = row_list, nbasis = nbasis, k = k, basis = basis,
-                         method = "L-BFGS-B",
-                         lower = c(rep(-Inf, length(fit$alpha)), 1e-6))
-        fit <- update_fit_par(fit, opt_out$par, X, data, basis, k)
-        
-    } else {
-        alpha_k <- fit$alpha_k
-
-        if(k > 1) {
-            beta_k <- transform %*% alpha_k
-        } else {
-            beta_k <- alpha_k
-        }
+    #' TODO: write find_fit_info
+    #' which should (eventually) include hessian,
+    #' approximate log marginal likelihood
+    #' stored mean and variation functions
+    #' estimates of the random effects, fitted values
+    #' (will need some other arguments as well as opt)
     
-        fit$beta <- cbind(fit_km1$beta, beta_k)
-        fit$f <- find_spline_fun(fit$beta, basis)
-    }
-    
-    fit
+    find_fit_info(opt)
 }
 
 
-#' Fit the mean-only mode, and set up for use in future fits
+#' Fit the mean-only model
 fit_0 <- function(data, sp, basis) {
     X_0 <- basis$X
     
@@ -99,132 +73,8 @@ fit_0 <- function(data, sp, basis) {
     resid <- data$y - y_hat_0
     sigma <- sd(resid)
 
-    clusters <- unique(data$c)
-    cluster_info <- lapply(clusters, init_cluster_info_0, data = data, sigma = sigma,
-                           z = resid)
-    
-
-    l_hat <- sum(dnorm(data$y, y_hat_0, sd = sigma, log = TRUE))
-    #' r is rank of S
-    S <- basis$S
-    r <- nrow(S) - 2
-    Sigma_inv <- (XtX + sp * basis$S) / sigma^2
-
- 
-    qhat <- emulator::quad.form(S, beta_0)
-    spr <- sp / (2 * sigma^2)
-
-    lprior_fun <- find_lprior_fun(0, beta_0, S)
-    
-    list(k = 0,
-         alpha = beta_0,
-         beta_0 = beta_0,
-         beta = matrix(nrow = ncol(X_0), ncol = 0),
-         sigma = sigma,
-         sp = sp,
-         spr = spr,
-         u = matrix(nrow = length(unique(clusters)), ncol = 0),
-         l_hat = l_hat,
-         lprior_fun = lprior_fun,
-         log_ml_contrib = approx_log_ml_contrib(Sigma_inv),
-         f0_x = y_hat_0,
-         f0 = find_spline_fun(beta_0, basis),
-         f_x = matrix(nrow = length(y_hat_0), ncol = 0),
-         f = function(x){ matrix(nrow = length(x), ncol = 0) },
-         cluster_info = cluster_info)
-}
-
-init_cluster_info_0 <- function(cluster, data, sigma, z) {
-    rows <- which(data$c == cluster)
-    n_c <- length(rows)
-    Sigma_inv <- diag(1/sigma^2, nrow = n_c, ncol = n_c)
-    ldet_Sigma <- 2 * n_c * log(sigma)
-    z <- z[rows]
-    Sigma_inv_z <- z / sigma^2
-    tz_Sigma_inv_z <- sum(z^2) / sigma^2
-    list(cluster = cluster, rows = rows, Sigma_inv = Sigma_inv,
-         ldet_Sigma = ldet_Sigma, z = z, Sigma_inv_z = Sigma_inv_z,
-         tz_Sigma_inv_z = tz_Sigma_inv_z)
-}
-
-init_cluster_info <- function(cluster, data, sigma, z, fx) {
-    rows <- which(data$c == cluster)
-    n_c <- length(rows)
-    fx_c <- fx[rows, , drop = FALSE]
-    n_c <- length(rows)
-    Sigma <- tcrossprod(fx_c, fx_c) + diag(sigma^2, nrow = n_c, ncol = n_c, names = FALSE)
-    Sigma_inv <- solve(Sigma)
-    ldet_Sigma <- log_det(Sigma)
-    z <- z[rows]
-    Sigma_inv_z <- as.numeric(Sigma_inv %*% z)
-    tz_Sigma_inv_z <- emulator::quad.form(Sigma_inv, z)
-    list(cluster = cluster, rows = rows, Sigma_inv = Sigma_inv,
-         ldet_Sigma = ldet_Sigma, z = z, Sigma_inv_z = Sigma_inv_z,
-         tz_Sigma_inv_z = tz_Sigma_inv_z)
-}
-
-update_cluster_info <- function(cluster_info_km1, f_k) {
-    a <- f_k[cluster_info_km1$rows]
-    find_info_k(a, cluster_info_km1)
-}
-
-update_fit_sigma <- function(fit_prev, sigma) {
-    s2_diff <- sigma^2 - fit_prev$sigma^2
-
-    fit_prev$sigma <- sigma
-    fit_prev$cluster_info <- lapply(fit_prev$cluster_info, update_cluster_info_sigma,
-                                    s2_diff = s2_diff)
-    fit_prev
-}
-
-update_fit_par <- function(fit, par, X, data, basis, k) {
-    nbasis <- nrow(basis$S)
-    sigma <- par[length(par)]
-    alpha <- par[-length(par)]
-    fit$alpha <- alpha
-    fit$sigma <- sigma
-    fit$spr <- fit$sp / (2 * sigma^2)
-    alpha_split <- split_alpha(alpha, nbasis, k)
-    beta0 <- alpha_split[[1]]
-    beta <- find_beta(alpha_split)
-    
-    
-    fit$beta_0 <- beta0
-    fit$f0_x <- X %*% beta0
-    fit$f0 <- find_spline_fun(beta0, basis)
-
-    fit$beta <- beta
-    fit$f_x <- X %*% beta
-    fit$f <- find_spline_fun(beta, basis)
-
-    fit$u <- find_u_hat(sigma, data, fit$f0_x, fit$f_x)
-
-    z <- data$y - fit$f0_x
-    
-    clusters <- unique(data$c)
-    cluster_info <- lapply(clusters, init_cluster_info, data = data, sigma = sigma,
-                           z = z, fx = fit$f_x)
-    fit$cluster_info <- cluster_info
-
-    fit
-    
-}
-
-update_cluster_info_sigma <- function(cluster_info_prev, s2_diff) {
-    Sigma_prev <- solve(cluster_info_prev$Sigma_inv)
-    Sigma <- Sigma_prev + diag(s2_diff, nrow = nrow(Sigma_prev), ncol = ncol(Sigma_prev))
-    
-    Sigma_inv <- solve(Sigma)
-    ldet_Sigma <- log_det(Sigma)
-    
-    z <- cluster_info_prev$z
-    Sigma_inv_z <- as.numeric(Sigma_inv %*% z)
-    tz_Sigma_inv_z <- emulator::quad.form(Sigma_inv, z)
-    
-    list(cluster = cluster_info_prev$cluster, rows = cluster_info_prev$rows,
-         Sigma_inv = Sigma_inv, ldet_Sigma = ldet_Sigma, z = z, Sigma_inv_z = Sigma_inv_z,
-         tz_Sigma_inv_z = tz_Sigma_inv_z)
-    
+    opt <- list(estimate = c(beta_0, sigma))
+    opt
 }
 
 

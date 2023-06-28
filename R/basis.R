@@ -4,7 +4,8 @@ find_orthogonal_spline_basis <- function(nbasis, x) {
     basis <- orthogonalsplinebasis::OrthogonalSplineBasis(knots)
     list(X = orthogonalsplinebasis::evaluate(basis, x = x),
          S = orthogonalsplinebasis::OuterProdSecondDerivative(basis),
-         basis = basis)
+         basis = basis,
+         nbasis = nbasis)
 }
 
 #' if x outside knots, extrapolate constant at nearest knot point, rather than NA
