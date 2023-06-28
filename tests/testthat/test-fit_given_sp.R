@@ -18,35 +18,32 @@ test_that("fitting with mean-only works correctly", {
         l + pen
     }
 
-    opt_man <- optim(mod$beta_0, l_pen_beta, sigma = mod$sigma, control = list(fnscale = -1),
+    opt_man <- optim(mod$beta0, l_pen_beta, sigma = mod$sigma, control = list(fnscale = -1),
                      method = "BFGS")
 
-    expect_equal(mod$beta_0, opt_man$par)
+    expect_equal(mod$beta0, opt_man$par)
     
 })
 
 
 test_that("can fit normal model with fixed k and penalty pars", {
     data_full <- generate_test_data_1()
-    data1 <- data_full$data
+    data <- data_full$data
     mu <- data_full$mu
     delta <- data_full$delta
     eta <- data_full$eta
 
-    nbasis <- 10
 
-    t1000 <- system.time(mod <- fit_given_sp(data1, 1000, 3, nbasis))
-    t100 <-  system.time(mod100 <- fit_given_sp(data1, 100, 3, nbasis))
-    t100_other_fit <- system.time(mod100_other_fit <- fit_given_sp(data1, 100, 3, nbasis, fit_other_sp = mod))
-
-    expect_lt(t100_other_fit[1], t100[1])
     
-    expect_equal(mod100_other_fit[[4]]$beta, mod100[[4]]$beta, tolerance = 1e-4)
-    expect_equal(mod100_other_fit[[4]]$l_pen_hat, mod100[[4]]$l_pen_hat)
+    nbasis <- 10
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
+
+
+    mod <- fit_given_sp(data, sp, 3, nbasis, 0.99)
 
     library(tidyverse)
     
-    pred_data <- bind_cols(x = data1$x, c = data1$c, eta = eta) %>%
+    pred_data <- bind_cols(x = data$x, c = data$c, eta = eta) %>%
         group_by(c) %>%
         mutate(eta_hat_0 = predict_flexl(mod[[1]], newdata = list(x = x, c = c[1])),
                eta_hat_1 = predict_flexl(mod[[2]], newdata = list(x = x, c = c[1])),

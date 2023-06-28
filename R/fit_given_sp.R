@@ -30,33 +30,54 @@ find_FVE <- function(fits) {
 }
 
 
+find_par0 <- function(fit_km1, k, nbasis) {
+    alpha_k0 <- rep(0.01, nbasis - k + 1)
+    c(fit_km1$beta0, fit_km1$alpha, alpha_k0, fit_km1$lsigma)
+}
+
+
+find_fit_info <- function(par, k, basis) {
+    par_split <- split_par(par, basis$nbasis)
+
+    f0 <- find_spline_fun(par_split$beta0, basis)
+
+    if(k > 0) {
+        beta <- find_beta(par_split$alpha, basis$nbasis, k)$value
+        f <- find_spline_fun(beta, basis)
+    } else {
+        f <- NULL
+    }
+
+    list(par = par,
+         beta0 = par_split$beta0,
+         alpha = par_split$alpha,
+         lsigma = par_split$lsigma,
+         beta = beta,
+         sigma = exp(par_split$lsigma),
+         f0 = f0,
+         f = f)
+    
+    
+    
+    
+}
+
+
 #' @param k the number of variation functions to use 
 fit_given_k <- function(data, sp, k, fit_km1, basis) {
 
     if(k == 0)
-        opt <- fit_0(data, sp, basis)
+        fit <- fit_0(data, sp, basis)
     else {
-        #' TODO: write find_par0 to add in extra zeroes
-        #' for alpha_k
-        par0 <- find_par0(fit_km1$par, k, basis$nbasis)
-
-        #' TODO: redo find_pen_deviance to take these
-        #' arguments only
-        #' The parameter in find_pen_deviance
-        #' should contain alpha0, alpha, lsigma
-        opt <- nlm(par0, find_pen_deviance, sp = sp,
-                   y = data$y, basis = basis)
+        par0 <- find_par0(fit_km1, k, basis$nbasis)
+        row_list <- split(1:nrow(data), data$c)
+        
+        opt <- nlm(find_pen_deviance_catch, par0, sp = sp, y = data$y, row_list = row_list,
+                   basis = basis, k = k)
+        fit <- find_fit_info(opt$estimate, k, basis)
     }
     
-
-    #' TODO: write find_fit_info
-    #' which should (eventually) include hessian,
-    #' approximate log marginal likelihood
-    #' stored mean and variation functions
-    #' estimates of the random effects, fitted values
-    #' (will need some other arguments as well as opt)
-    
-    find_fit_info(opt)
+    fit
 }
 
 
@@ -73,8 +94,7 @@ fit_0 <- function(data, sp, basis) {
     resid <- data$y - y_hat_0
     sigma <- sd(resid)
 
-    opt <- list(estimate = c(beta_0, sigma))
-    opt
+    find_fit_info(c(beta_0, log(sigma)), 0, basis)
 }
 
 

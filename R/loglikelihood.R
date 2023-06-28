@@ -53,5 +53,12 @@ find_pen_deviance <- function(par, sp, y, row_list, basis, k) {
 }
 
 
+find_pen_deviance_catch <- function(par, sp, y, row_list, basis, k) {
+    tryCatch(find_pen_deviance(par, sp, y, row_list, basis, k),
+             error = function(cond) {
+                 message(cond)
+                 Inf
+             })
+}
 
 

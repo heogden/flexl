@@ -23,7 +23,11 @@ test_that("derivatives of loglikelihood are correct", {
     #' check: is the fit reasonable?
     #' this is easiest to do if we can do prediction. So next up,
     #' write code to wrap up fitting information (from par)
-    
+
+    #' what
+    fit0 <- fit_0(data, sp, basis)
+
+
     
     pen_deviance_grad_man <- numDeriv::grad(find_pen_deviance, par, sp = sp, y = data$y,
                                             row_list = row_list, basis = basis, k = k)
