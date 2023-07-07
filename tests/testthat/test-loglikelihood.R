@@ -13,19 +13,19 @@ test_that("derivatives of loglikelihood are correct", {
     
     set.seed(1)
     par <- c(rnorm(nbasis + length(alpha_components), sd = 0.1), 0)
+
+    par_split <- split_par(par, basis$nbasis)
+
+    beta0 <- par_split$beta0
+    beta <- find_beta(par_split$alpha, basis$nbasis, k)$value
+    sigma <- exp(par_split$lsigma)
+
+    f0 <- as.numeric(basis$X %*% beta0)
+    fx <- basis$X %*% beta
+    rows <- row_list[[1]]
+    y <- data$y
     
-    pen_deviance <- find_pen_deviance(par, sp, data$y, row_list, basis, k)
-
-    opt_out <- optim(par, find_pen_deviance, sp = sp, y = data$y, row_list = row_list,
-                     basis = basis, k = k, method = "L-BFGS-B", lower = -5, upper = 5,
-                     control = list(maxit = 1000))
-
-    #' check: is the fit reasonable?
-    #' this is easiest to do if we can do prediction. So next up,
-    #' write code to wrap up fitting information (from par)
-
-    #' what
-    fit0 <- fit_0(data, sp, basis)
+    find_loglikelihood_cluster(rows, f0, fx, y, sigma)
 
 
     

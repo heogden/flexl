@@ -7,6 +7,31 @@ find_loglikelihood_cluster <- function(rows, f0, fx, y, sigma) {
     mvnfast::dmvn(y_c, mu = f0_c, sigma = Sigma, log = TRUE)
 }
 
+find_loglikelihood_cluster_struc <- function(rows, f0, fx, y, sigma) {
+    f0_c <- f0[rows]
+    fx_c <- fx[rows, , drop = FALSE]
+    y_c <- y[rows]
+
+    tau <- 1 / sigma^2
+    n <- length(rows)
+    
+    K <- ncol(fx_c)
+    c <- tau * fx_c
+    if(K > 1) {
+        for(k in 2:K) {
+            c_prev <- c[, 1:(k-1), drop = FALSE]
+            f_prev <- fx[, 1:(k-1), drop = FALSE]
+            a_k <- tcrossprod(f[,k], c_prev)
+            a_prev <- rowSums(f_prev * c_prev)
+            r <- a_k / a_prev
+            c[,k] <- c[,k] - colSums(c_prev * r)
+            b[,k] <- c[,k] / a_k
+        }
+    }
+    
+    
+}
+
 
 find_loglikelihood_beta <- function(beta0, beta, sigma, y, row_list, basis, k) {
     f0 <- as.numeric(basis$X %*% beta0)
