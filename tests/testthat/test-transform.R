@@ -26,12 +26,13 @@ test_that("can differentiate transform", {
     alpha <- rnorm(length(components))
 
     beta <- find_beta(alpha, nbasis, k)
-
+    beta_only <- find_beta_only(alpha, nbasis, k)
+    expect_equal(beta$value, beta_only)
     
     dbeta_man <- array(dim = c(nbasis, length(alpha), k))
     for(i in 1:k) {
         dbeta_man[,,i] <- numDeriv::jacobian(function(x) {
-            find_beta(x, nbasis, k)$value[,i]
+            find_beta_only(x, nbasis, k)[,i]
         }, alpha)
     }
 
