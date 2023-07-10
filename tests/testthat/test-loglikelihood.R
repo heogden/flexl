@@ -12,7 +12,7 @@ test_that("derivatives of loglikelihood are correct", {
     alpha_components <- find_alpha_components(nbasis, k)
     
     set.seed(1)
-    par <- c(rnorm(nbasis + length(alpha_components), sd = 0.1), 0)
+    par <- c(rnorm(nbasis + length(alpha_components), sd = 0.1), 1)
 
     par_split <- split_par(par, basis$nbasis)
 
@@ -28,7 +28,6 @@ test_that("derivatives of loglikelihood are correct", {
     l1 <- find_loglikelihood_cluster(rows, f0, fx, y, sigma)
     l2 <- find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
     expect_equal(l2, l1)
-
     
     pen_deviance_grad_man <- numDeriv::grad(find_pen_deviance, par, sp = sp, y = data$y,
                                             row_list = row_list, basis = basis, k = k)

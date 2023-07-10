@@ -19,7 +19,7 @@ find_loglikelihood_cluster_struc <- function(rows, f0, fx, y, sigma) {
     K <- ncol(fx_c)
 
     d <- matrix(NA, nrow = n, ncol = K)
-    ldet_Sigma <- n * log(tau)
+    ldet_Sigma <- - n * log(tau)
     Q <- tau * sum(z^2)
     
     for(k in 1:K) {
