@@ -6,7 +6,7 @@ test_that("derivatives of loglikelihood are correct", {
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
 
-    k <- 3
+    k <- 2
 
     row_list <- split(1:nrow(data), data$c)
     alpha_components <- find_alpha_components(nbasis, k)
@@ -27,12 +27,15 @@ test_that("derivatives of loglikelihood are correct", {
     
     l1 <- find_loglikelihood_cluster(rows, f0, fx, y, sigma)
     l2 <- find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
+    l3 <- find_loglikelihood_cluster_from_Cpp(rows, f0, fx, y, sigma)
     expect_equal(l2, l1)
+    expect_equal(l3, l1)
 
     library(microbenchmark)
     microbenchmark(
         find_loglikelihood_cluster(rows, f0, fx, y, sigma),
-        find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
+        find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma),
+        find_loglikelihood_cluster_from_Cpp(rows, f0, fx, y, sigma)
     )
     #' new method is a little bit slower for k > 1, faster for k = 1
 
@@ -43,7 +46,8 @@ test_that("derivatives of loglikelihood are correct", {
 
     microbenchmark(
         find_loglikelihood_cluster(rows, f0, fx, y, sigma),
-        find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
+        find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma),
+        find_loglikelihood_cluster_from_Cpp(rows, f0, fx, y, sigma)
     )
     #' if we have a larger number of obs/cluster, new method wins even for larger k
     

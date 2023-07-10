@@ -51,6 +51,13 @@ find_loglikelihood_cluster_struc <- function(rows, f0, fx, y, sigma) {
     
 }
 
+find_loglikelihood_cluster_from_Cpp <- function(rows, f0, fx, y, sigma) {
+    f0_c <- f0[rows]
+    fx_c <- fx[rows, , drop = FALSE]
+    y_c <- y[rows]
+    find_loglikelihood_cluster_Cpp(f0_c, fx_c, y_c, sigma)
+}
+
 
 find_loglikelihood_beta <- function(beta0, beta, sigma, y, row_list, basis, k) {
     f0 <- as.numeric(basis$X %*% beta0)
