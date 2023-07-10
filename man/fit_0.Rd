@@ -2,12 +2,10 @@
 % Please edit documentation in R/fit_given_sp.R
 \name{fit_0}
 \alias{fit_0}
-\title{Fit the mean-only mode, and set up for use in future fits
-r is rank of S}
+\title{Fit the mean-only model}
 \usage{
 fit_0(data, sp, basis)
 }
 \description{
-Fit the mean-only mode, and set up for use in future fits
-r is rank of S
+Fit the mean-only model
 }
