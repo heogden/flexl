@@ -29,7 +29,10 @@ find_loglikelihood_cluster_struc <- function(rows, f0, fx, y, sigma) {
             f_prev <- fx[, 1:(k-1), drop = FALSE]
             d_prev <- d[, 1:(k-1), drop = FALSE]
             
-            b_k <- tau * f_k - tcrossprod(d_prev, crossprod(d_prev, f_k))
+            d_f_k <- colSums(f_k * d_prev)
+            b_k <- tau * f_k - as.numeric(tcrossprod(d_f_k, d_prev))
+
+            
         } else {
             b_k <- tau * f_k
         }
