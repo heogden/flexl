@@ -28,6 +28,14 @@ test_that("derivatives of loglikelihood are correct", {
     l1 <- find_loglikelihood_cluster(rows, f0, fx, y, sigma)
     l2 <- find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
     expect_equal(l2, l1)
+
+    library(microbenchmark)
+    microbenchmark(
+        find_loglikelihood_cluster(rows, f0, fx, y, sigma),
+        find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
+    )
+    #' new method is a little bit slower for k > 1, faster for k = 1
+    
     
     pen_deviance_grad_man <- numDeriv::grad(find_pen_deviance, par, sp = sp, y = data$y,
                                             row_list = row_list, basis = basis, k = k)
