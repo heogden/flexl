@@ -25,8 +25,9 @@ test_that("derivatives of loglikelihood are correct", {
     rows <- row_list[[1]]
     y <- data$y
     
-    find_loglikelihood_cluster(rows, f0, fx, y, sigma)
-
+    l1 <- find_loglikelihood_cluster(rows, f0, fx, y, sigma)
+    l2 <- find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
+    expect_equal(l2, l1)
 
     
     pen_deviance_grad_man <- numDeriv::grad(find_pen_deviance, par, sp = sp, y = data$y,

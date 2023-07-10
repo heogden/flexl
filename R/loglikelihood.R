@@ -11,24 +11,40 @@ find_loglikelihood_cluster_struc <- function(rows, f0, fx, y, sigma) {
     f0_c <- f0[rows]
     fx_c <- fx[rows, , drop = FALSE]
     y_c <- y[rows]
+    z <- y_c - f0_c
 
     tau <- 1 / sigma^2
     n <- length(rows)
     
     K <- ncol(fx_c)
-    c <- tau * fx_c
-    if(K > 1) {
-        for(k in 2:K) {
-            c_prev <- c[, 1:(k-1), drop = FALSE]
-            f_prev <- fx[, 1:(k-1), drop = FALSE]
-            a_k <- tcrossprod(f[,k], c_prev)
-            a_prev <- rowSums(f_prev * c_prev)
-            r <- a_k / a_prev
-            c[,k] <- c[,k] - colSums(c_prev * r)
-            b[,k] <- c[,k] / a_k
-        }
-    }
+
+    d <- matrix(NA, nrow = n, ncol = K)
+    ldet_Sigma <- n * log(tau)
+    Q <- tau * sum(z^2)
     
+    for(k in 1:K) {
+        f_k <- fx_c[,k]
+
+        if(k > 1) {
+            f_prev <- fx[, 1:(k-1), drop = FALSE]
+            d_prev <- d[, 1:(k-1), drop = FALSE]
+            
+            b_k <- tau * f_k - tcrossprod(d_prev, crossprod(d_prev, f_k))
+        } else {
+            b_k <- tau * f_k
+        }
+        
+        
+        a_k <- 1 + sum(b_k * f_k)
+        d[,k] <- b_k / sqrt(a_k)
+
+        ldet_Sigma <- ldet_Sigma + log(a_k)
+
+        Q <- Q - sum(d[,k] * z)^2
+        
+    }
+
+    - (n * log(2 * pi) + ldet_Sigma + Q) / 2
     
 }
 
