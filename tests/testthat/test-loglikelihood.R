@@ -35,7 +35,17 @@ test_that("derivatives of loglikelihood are correct", {
         find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
     )
     #' new method is a little bit slower for k > 1, faster for k = 1
-    
+
+    #' what if cluster size was much larger?
+    #' e.g. for whole data?
+
+    rows <- Reduce(c, row_list)
+
+    microbenchmark(
+        find_loglikelihood_cluster(rows, f0, fx, y, sigma),
+        find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma)
+    )
+    #' if we have a larger number of obs/cluster, new method wins even for larger k
     
     pen_deviance_grad_man <- numDeriv::grad(find_pen_deviance, par, sp = sp, y = data$y,
                                             row_list = row_list, basis = basis, k = k)
