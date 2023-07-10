@@ -6,7 +6,7 @@ test_that("derivatives of loglikelihood are correct", {
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
 
-    k <- 2
+    k <- 3
 
     row_list <- split(1:nrow(data), data$c)
     alpha_components <- find_alpha_components(nbasis, k)
