@@ -37,9 +37,10 @@ double find_loglikelihood_cluster_Cpp(Rcpp::NumericVector& f0_c, Rcpp::NumericMa
     a_k = 1 + Rcpp::sum(b_k * f_k);
     d_k = b_k / std::sqrt(a_k);
     D( Rcpp::_ , k) = d_k;
+  
+    ldet_Sigma += log(a_k);
+    Q -= std::pow(Rcpp::sum(d_k * z), 2);
   }
-  ldet_Sigma += log(a_k);
-  Q -= std::pow(Rcpp::sum(d_k * z), 2);
 
   return - (n * std::log(2 * M_PI) + ldet_Sigma + Q) / 2;
 

@@ -6,7 +6,7 @@ test_that("derivatives of loglikelihood are correct", {
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
 
-    k <- 2
+    k <- 3
 
     row_list <- split(1:nrow(data), data$c)
     alpha_components <- find_alpha_components(nbasis, k)
@@ -37,7 +37,8 @@ test_that("derivatives of loglikelihood are correct", {
         find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma),
         find_loglikelihood_cluster_from_Cpp(rows, f0, fx, y, sigma)
     )
-    #' new method is a little bit slower for k > 1, faster for k = 1
+    #' new method in R is a little bit slower for k > 1, faster for k = 1
+    #' new method in C++ is the fastest of all
 
     #' what if cluster size was much larger?
     #' e.g. for whole data?
@@ -49,7 +50,9 @@ test_that("derivatives of loglikelihood are correct", {
         find_loglikelihood_cluster_struc(rows, f0, fx, y, sigma),
         find_loglikelihood_cluster_from_Cpp(rows, f0, fx, y, sigma)
     )
-    #' if we have a larger number of obs/cluster, new method wins even for larger k
+    #' if we have a larger number of obs/cluster, new method in R wins even for larger k
+    #' for some reason, new method in C++ is slightly slower than in R for large number
+    #' of obs/cluster: because we are passing the vectors/matrices about?
     
     pen_deviance_grad_man <- numDeriv::grad(find_pen_deviance, par, sp = sp, y = data$y,
                                             row_list = row_list, basis = basis, k = k)
