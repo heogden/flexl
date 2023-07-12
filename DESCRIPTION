@@ -17,6 +17,10 @@ Imports:
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-LinkingTo: 
+LinkingTo:
     Rcpp,
-    RcppEigen
+    RcppEigen,
+    StanHeaders (>= 2.21.0),
+    RcppParallel (>= 5.0.1),
+    BH (>= 1.66.0)
+SystemRequirements: GNU make

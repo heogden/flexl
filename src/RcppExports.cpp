@@ -25,9 +25,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ldnorm_with_derivs
+NumericVector ldnorm_with_derivs(Eigen::VectorXd x, Eigen::VectorXd theta);
+RcppExport SEXP _flexl_ldnorm_with_derivs(SEXP xSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type theta(thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(ldnorm_with_derivs(x, theta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_flexl_find_loglikelihood_cluster_Cpp", (DL_FUNC) &_flexl_find_loglikelihood_cluster_Cpp, 4},
+    {"_flexl_ldnorm_with_derivs", (DL_FUNC) &_flexl_ldnorm_with_derivs, 2},
     {NULL, NULL, 0}
 };
 

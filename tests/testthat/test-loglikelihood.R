@@ -63,4 +63,16 @@ test_that("derivatives of loglikelihood are correct", {
                                                row_list = row_list, basis = basis, k = k)
     pen_deviance_hess_auto <- attr(pen_deviance, "hessian")
     expect_equal(pen_deviance_hess_auto, pen_deviance_hess_man)
+
+
+
 })
+
+test_that("can use Stan with autodiff", {
+    set.seed(1)
+    n <- 100
+    x <- rnorm(n, mean = 0, sd = 1)
+
+    ldnorm_with_derivs(x, c(1, 1))
+})
+
