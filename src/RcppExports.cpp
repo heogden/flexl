@@ -25,6 +25,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// find_loglikelihood_cluster_Stan
+NumericVector find_loglikelihood_cluster_Stan(NumericVector theta, Eigen::MatrixXd X_c, NumericVector y_c);
+RcppExport SEXP _flexl_find_loglikelihood_cluster_Stan(SEXP thetaSEXP, SEXP X_cSEXP, SEXP y_cSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type X_c(X_cSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y_c(y_cSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_loglikelihood_cluster_Stan(theta, X_c, y_c));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ldnorm_with_derivs
 NumericVector ldnorm_with_derivs(Eigen::VectorXd x, Eigen::VectorXd theta);
 RcppExport SEXP _flexl_ldnorm_with_derivs(SEXP xSEXP, SEXP thetaSEXP) {
@@ -40,6 +53,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_flexl_find_loglikelihood_cluster_Cpp", (DL_FUNC) &_flexl_find_loglikelihood_cluster_Cpp, 4},
+    {"_flexl_find_loglikelihood_cluster_Stan", (DL_FUNC) &_flexl_find_loglikelihood_cluster_Stan, 3},
     {"_flexl_ldnorm_with_derivs", (DL_FUNC) &_flexl_ldnorm_with_derivs, 2},
     {NULL, NULL, 0}
 };

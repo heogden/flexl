@@ -40,6 +40,13 @@ test_that("derivatives of loglikelihood are correct", {
     #' new method in R is a little bit slower for k > 1, faster for k = 1
     #' new method in C++ is the fastest of all
 
+
+    X <- basis$X
+    X_c <- X[rows, ]
+    y_c <- y[rows]
+    l4 <- find_loglikelihood_cluster_stan(par, X_c, y_c)
+
+    
     #' what if cluster size was much larger?
     #' e.g. for whole data?
 
@@ -63,7 +70,6 @@ test_that("derivatives of loglikelihood are correct", {
                                                row_list = row_list, basis = basis, k = k)
     pen_deviance_hess_auto <- attr(pen_deviance, "hessian")
     expect_equal(pen_deviance_hess_auto, pen_deviance_hess_man)
-
 
 
 })
