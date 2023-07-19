@@ -6,7 +6,7 @@ test_that("derivatives of loglikelihood are correct", {
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
 
-    k <- 3
+    k <- 1
 
     row_list <- split(1:nrow(data), data$c)
     alpha_components <- find_alpha_components(nbasis, k)
@@ -40,11 +40,29 @@ test_that("derivatives of loglikelihood are correct", {
     #' new method in R is a little bit slower for k > 1, faster for k = 1
     #' new method in C++ is the fastest of all
 
-
+    
     X <- basis$X
     X_c <- X[rows, ]
     y_c <- y[rows]
-    l4 <- find_loglikelihood_cluster_stan(par, X_c, y_c)
+
+    l4 <- find_loglikelihood_cluster_Stan(par, X_c, y_c)
+
+    l_cluster_basic <- function(par) {
+        beta_0 <- par[1:5]
+        beta_1 <- par[6:10]
+        sigma <- par[11]
+        f0_c <- X_c %*% beta_0
+        f1_c <- X_c %*% beta_1
+        Sigma <- diag(sigma^2, nrow = 10) + outer(as.numeric(f1_c), as.numeric(f1_c))
+        mvtnorm::dmvnorm(y_c, f0_c, Sigma, log = TRUE)
+    }
+
+    library(numDeriv)
+    grad_man <- grad(l_cluster_basic, par)
+    hess_man <- hessian(l_cluster_basic, par)
+
+    expect_equal(attr(l4, "gradient"), grad_man)
+    expect_equal(attr(l4, "hessian"), hess_man)
 
     
     #' what if cluster size was much larger?

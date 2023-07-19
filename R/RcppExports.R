@@ -5,10 +5,6 @@ find_loglikelihood_cluster_Cpp <- function(f0_c, fx_c, y_c, sigma) {
     .Call(`_flexl_find_loglikelihood_cluster_Cpp`, f0_c, fx_c, y_c, sigma)
 }
 
-find_loglikelihood_cluster_Stan <- function(theta, X_c, y_c) {
-    .Call(`_flexl_find_loglikelihood_cluster_Stan`, theta, X_c, y_c)
-}
-
 ldnorm_with_derivs <- function(x, theta) {
     .Call(`_flexl_ldnorm_with_derivs`, x, theta)
 }
