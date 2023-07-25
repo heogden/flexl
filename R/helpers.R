@@ -1,3 +1,9 @@
+drop_attributes <- function(x) {
+    attributes(x) <- NULL
+    x
+}
+
+
 log_det <- function(x) {
     drop_attributes(
         determinant(x, logarithm = TRUE)$modulus

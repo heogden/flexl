@@ -1,4 +1,4 @@
-fit_flexl <- function(data, nbasis = 10) {
+fit_flexl <- function(data, nbasis = 10, tFVE = 0.99) {
     if(any(is.na(data)))
         stop("There are missing values in the data, which flexl cannot handle")
     
@@ -7,14 +7,14 @@ fit_flexl <- function(data, nbasis = 10) {
     sp_poss <- exp(lsp_poss)
 
     fits_poss <- list()
-    fits_poss[[1]] <- fit_given_sp(data, sp_poss[1], 10, nbasis, 0.99)
+    fits_poss[[1]] <- fit_given_sp(data, sp_poss[1], 10, nbasis, tFVE)
     kmax <- length(fits_poss[[1]]) - 1
 
     log_ml_poss <- c()
     log_ml_poss[1] <- (fits_poss[[1]])[[kmax + 1]]$log_ml
     
     for(i in 2:length(sp_poss)) {
-        fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1, fits_poss[[i-1]])
+        fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1)
         log_ml_poss[i] <- (fits_poss[[i]])[[kmax + 1]]$log_ml
         if(log_ml_poss[i] < log_ml_poss[i-1]) {
             lsp_poss <- lsp_poss[1:i]
@@ -28,7 +28,7 @@ fit_flexl <- function(data, nbasis = 10) {
             lsp_poss <- c(lsp_poss, max(lsp_poss) + 1)
             sp_poss <- exp(lsp_poss)
             i <- i + 1
-            fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1, fits_poss[[i-1]])
+            fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1)
             log_ml_poss[i] <- (fits_poss[[i]])[[kmax + 1]]$log_ml
         }
         
@@ -39,12 +39,10 @@ fit_flexl <- function(data, nbasis = 10) {
     lsp <- opt_out$maximum
     sp <- exp(lsp)
 
-    which_closest_lsp <- which.min(abs(lsp_poss - lsp))
-    fit_closest_sp <- fits_poss[[which_closest_lsp]]
    
-    fit <- fit_given_sp(data, sp, kmax, nbasis, 0.99, fit_closest_sp)
+    fit <- fit_given_sp(data, sp, kmax, nbasis, tFVE)
     FVE <- find_FVE(fit)
-    index <- which(find_FVE(fit) > 0.99)[1]
+    index <- which(find_FVE(fit) > tFVE)[1]
     fit[[index]]                    
 }
 

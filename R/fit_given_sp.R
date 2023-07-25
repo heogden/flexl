@@ -36,7 +36,14 @@ find_par0 <- function(fit_km1, k, nbasis) {
 }
 
 
-find_fit_info <- function(par, k, basis) {
+split_par <- function(par, nbasis) {
+    components <- rep("alpha", length(par))
+    components[1:nbasis] <- "beta0"
+    components[length(par)] <- "lsigma"
+    split(par, components)
+}
+
+find_fit_info <- function(par, l_pen, hessian, k, basis, sp) {
     par_split <- split_par(par, basis$nbasis)
 
 
@@ -49,13 +56,19 @@ find_fit_info <- function(par, k, basis) {
         f_x <- basis$X %*% beta
         u_hat <- find_u_hat(exp(par_split$lsigma), data, f0_x, f_x)
         f <- find_spline_fun(beta, basis)
+        log_ml <- approx_log_ml(l_pen, hessian)
     } else {
         f <- NULL
         u_hat <- NULL
+        log_ml <- NULL
     }
 
     list(k = k,
+         sp = sp,
          par = par,
+         l_pen = l_pen,
+         hessian = hessian,
+         log_ml = log_ml,
          beta0 = par_split$beta0,
          alpha = par_split$alpha,
          lsigma = par_split$lsigma,
@@ -83,7 +96,10 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
                      X = basis$X, y = data$y, c = data$c - 1,
                      sp = sp, S = basis$S, K = k,
                      method = "BFGS", control = list(fnscale = -1))
-        fit <- find_fit_info(opt$par, k, basis)
+        opt$hessian <- loglikelihood_pen_hess(opt$par,
+                                              X = basis$X, y = data$y, c = data$c - 1,
+                                              sp = sp, S = basis$S, K = k)
+        fit <- find_fit_info(opt$par, opt$value, opt$hessian, k, basis, sp)
     }
     
     fit
@@ -103,7 +119,7 @@ fit_0 <- function(data, sp, basis) {
     resid <- data$y - y_hat_0
     sigma <- sd(resid)
 
-    find_fit_info(c(beta_0, log(sigma)), 0, basis)
+    find_fit_info(c(beta_0, log(sigma)), NULL, NULL, 0, basis, sp)
 }
 
 
