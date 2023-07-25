@@ -8,7 +8,7 @@ fit_given_sp <- function(data, sp, kmax, nbasis, fve_threshold = 1) {
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
     fits <- list()
     #' fit the mean-only model (k = 0)
-    fits[[1]] <- fit_0(data, sp, basis)
+    fits[[1]] <- fit_given_k(data, sp, 0, NULL, basis)
     
     #' fit with k variation functions, fixing mean and first k-1 functions
     if(kmax > 0) {
@@ -31,7 +31,11 @@ find_FVE <- function(fits) {
 
 
 find_par0 <- function(fit_km1, k, nbasis) {
+    if(k == 0) {
+        return(c(rep(0.01, nbasis), 0))
+    }
     alpha_k0 <- rep(0.01, nbasis - k + 1)
+
     c(fit_km1$beta0, fit_km1$alpha, alpha_k0, fit_km1$lsigma)
 }
 
@@ -50,17 +54,16 @@ find_fit_info <- function(par, l_pen, hessian, k, basis, sp) {
     f0_x <- basis$X %*% par_split$beta0
     f0 <- find_spline_fun(par_split$beta0, basis)
     
+    log_ml <- approx_log_ml(l_pen, hessian)
 
     if(k > 0) {
         beta <- find_beta(par_split$alpha, basis$nbasis, k)$value
         f_x <- basis$X %*% beta
         u_hat <- find_u_hat(exp(par_split$lsigma), data, f0_x, f_x)
         f <- find_spline_fun(beta, basis)
-        log_ml <- approx_log_ml(l_pen, hessian)
     } else {
         f <- NULL
         u_hat <- NULL
-        log_ml <- NULL
     }
 
     list(k = k,
@@ -87,39 +90,17 @@ find_fit_info <- function(par, l_pen, hessian, k, basis, sp) {
 #' @param k the number of variation functions to use 
 fit_given_k <- function(data, sp, k, fit_km1, basis) {
 
-    if(k == 0)
-        fit <- fit_0(data, sp, basis)
-    else {
-        par0 <- find_par0(fit_km1, k, basis$nbasis)        
-        
-        opt <- optim(par0, loglikelihood_pen, loglikelihood_pen_grad,
-                     X = basis$X, y = data$y, c = data$c - 1,
-                     sp = sp, S = basis$S, K = k,
-                     method = "BFGS", control = list(fnscale = -1))
-        opt$hessian <- loglikelihood_pen_hess(opt$par,
-                                              X = basis$X, y = data$y, c = data$c - 1,
-                                              sp = sp, S = basis$S, K = k)
-        fit <- find_fit_info(opt$par, opt$value, opt$hessian, k, basis, sp)
-    }
+    par0 <- find_par0(fit_km1, k, basis$nbasis)        
+    
+    opt <- optim(par0, loglikelihood_pen, loglikelihood_pen_grad,
+                 X = basis$X, y = data$y, c = data$c - 1,
+                 sp = sp, S = basis$S, K = k,
+                 method = "BFGS", control = list(fnscale = -1))
+    opt$hessian <- loglikelihood_pen_hess(opt$par,
+                                          X = basis$X, y = data$y, c = data$c - 1,
+                                          sp = sp, S = basis$S, K = k)
+    fit <- find_fit_info(opt$par, opt$value, opt$hessian, k, basis, sp)
     
     fit
 }
-
-
-#' Fit the mean-only model
-fit_0 <- function(data, sp, basis) {
-    X_0 <- basis$X
-    
-    Xt_y <- crossprod(X_0, data$y)
-    XtX <- crossprod(X_0, X_0)
-
-    
-    beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
-    y_hat_0 <- X_0 %*% beta_0
-    resid <- data$y - y_hat_0
-    sigma <- sd(resid)
-
-    find_fit_info(c(beta_0, log(sigma)), NULL, NULL, 0, basis, sp)
-}
-
 
