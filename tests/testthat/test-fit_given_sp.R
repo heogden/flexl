@@ -33,13 +33,9 @@ test_that("can fit normal model with fixed k and penalty pars", {
     delta <- data_full$delta
     eta <- data_full$eta
 
-
+    sp <- 100
     
-    nbasis <- 10
-    basis <- find_orthogonal_spline_basis(nbasis, data$x)
-
-
-    mod <- fit_given_sp(data, sp, 3, nbasis, 0.99)
+    system.time(mod <- fit_given_sp(data, sp, 3, nbasis, 0.99))
 
     library(tidyverse)
     
