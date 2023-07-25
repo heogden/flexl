@@ -80,8 +80,12 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
         par0 <- find_par0(fit_km1, k, basis$nbasis)
         row_list <- split(1:nrow(data), data$c)
         
-        opt <- nlm(find_pen_deviance_catch, par0, sp = sp, y = data$y, row_list = row_list,
-                   basis = basis, k = k)
+        #opt <- nlm(find_pen_deviance_catch, par0, sp = sp, y = data$y, row_list = row_list,
+                                        #           basis = basis, k = k)
+        opt <- optim(loglikelihood_pen, loglikelihood_pen_grad,
+                     X = basis$X, y = data$y, c = data$c - 1,
+                     sp = sp, S = basis$S, K = k,
+                     method = "BFGS", control = list(fnscale = -1))
         fit <- find_fit_info(opt$estimate, k, basis)
     }
     

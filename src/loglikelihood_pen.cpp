@@ -182,13 +182,13 @@ struct loglikp_func {
 };
   
 // [[Rcpp::export]]
-double find_loglikelihood_pen_noderiv(Eigen::VectorXd theta,
-				      Eigen::MatrixXd X,
-				      Eigen::VectorXd y,
-				      std::vector<int> c,
-				      double sp,
-				      Eigen::MatrixXd S,
-				      size_t K) {
+double loglikelihood_pen(Eigen::VectorXd theta,
+			 Eigen::MatrixXd X,
+			 Eigen::VectorXd y,
+			 std::vector<int> c,
+			 double sp,
+			 Eigen::MatrixXd S,
+			 size_t K) {
 
   loglikp_func lf(X, y, c, sp, S, K);
   return lf(theta);
@@ -196,13 +196,13 @@ double find_loglikelihood_pen_noderiv(Eigen::VectorXd theta,
 
 
 // [[Rcpp::export]]
-NumericVector find_loglikelihood_pen_with_grad(Eigen::VectorXd theta,
-					       Eigen::MatrixXd X,
-					       Eigen::VectorXd y,
-					       std::vector<int> c,
-					       double sp,
-					       Eigen::MatrixXd S,
-					       size_t K) {
+NumericVector loglikelihood_pen_grad(Eigen::VectorXd theta,
+				     Eigen::MatrixXd X,
+				     Eigen::VectorXd y,
+				     std::vector<int> c,
+				     double sp,
+				     Eigen::MatrixXd S,
+				     size_t K) {
   // declarations
   double l;
   Eigen::VectorXd grad_l;
@@ -213,23 +213,20 @@ NumericVector find_loglikelihood_pen_with_grad(Eigen::VectorXd theta,
 
   
   // reformat returned result
-  NumericVector l1 = wrap(l);
   NumericVector grad_l1 = wrap(grad_l);
-
-  l1.attr("gradient") = grad_l1;
   
-  return l1;
+  return grad_l1;
 }
 
 
 // [[Rcpp::export]]
-NumericVector find_loglikelihood_pen_with_hess(Eigen::VectorXd theta,
-					       Eigen::MatrixXd X,
-					       Eigen::VectorXd y,
-					       std::vector<int> c,
-					       double sp,
-					       Eigen::MatrixXd S,
-					       size_t K) {
+NumericVector loglikelihood_pen_hess(Eigen::VectorXd theta,
+				     Eigen::MatrixXd X,
+				     Eigen::VectorXd y,
+				     std::vector<int> c,
+				     double sp,
+				     Eigen::MatrixXd S,
+				     size_t K) {
   // declarations
   double l;
   Eigen::VectorXd grad_l;
@@ -241,12 +238,7 @@ NumericVector find_loglikelihood_pen_with_hess(Eigen::VectorXd theta,
 
   
   // reformat returned result
-  NumericVector l1 = wrap(l);
-  NumericVector grad_l1 = wrap(grad_l);
   NumericMatrix hess_l1 = wrap(hess_l);
 
-  l1.attr("gradient") = grad_l1;
-  l1.attr("hessian") = hess_l1;
-  
-  return l1;
+  return hess_l1;
 }
