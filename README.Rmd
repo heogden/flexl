@@ -42,6 +42,9 @@ to switch off the warnings. This was necessary because the code
 was very slow to compile if all warnings were printed (because of things included
 from Boost and Eigen).
 
+I also set the `CXX17`, according to 
+https://github.com/stan-dev/rstan/wiki/Configuring-C-Toolchain-for-Linux
+
 ## Example
 
 This is a basic example which shows you how to solve a common problem:

@@ -6,8 +6,6 @@ test_that("derivatives of loglikelihood are correct", {
     sp <- 10
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
 
-
-    row_list <- split(1:nrow(data), data$c)
     alpha_components <- find_alpha_components(nbasis, k)
 
     set.seed(1)
@@ -35,8 +33,6 @@ test_that("derivatives of loglikelihood are correct", {
     )
     #' timings similar to passing in beta: doing transform does not add too much cost
     #' can do ~ 900 iterations per second with the gradient
-    #' (current version seems to have slowed down slightly from compiling outside of the package
-    #'  there ~1400 iter/s)
 
 
 
