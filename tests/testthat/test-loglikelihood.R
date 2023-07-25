@@ -36,8 +36,10 @@ test_that("derivatives of loglikelihood are correct", {
     library(testthat)
     expect_equal(lp, lp_R)
 
-    lp_with_deriv <- find_loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
-    lp_with_grad <- find_loglikelihood_pen_with_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
+    lp_with_deriv <- find_loglikelihood_pen_with_hess(par, basis$X, data$y, data$c - 1, sp,
+                                                      basis$S, k)
+    lp_with_grad <- find_loglikelihood_pen_with_grad(par, basis$X, data$y, data$c - 1, sp,
+                                                     basis$S, k)
 
     lp_fun <- function(par) {
         find_loglikelihood_pen_noderiv(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
@@ -56,7 +58,7 @@ test_that("derivatives of loglikelihood are correct", {
         l_pen_R(par, sp),
         find_loglikelihood_pen_noderiv(par, basis$X, data$y, data$c - 1, sp, basis$S, k),
         find_loglikelihood_pen_with_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k),
-        find_loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
+        find_loglikelihood_pen_with_hess(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
     )
     #' timings similar to passing in beta: doing transform does not add too much cost
     #' could do ~ 1400 iterations per second with the gradient (when compiled outside of package)

@@ -45,9 +45,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// find_loglikelihood_pen
-NumericVector find_loglikelihood_pen(Eigen::VectorXd theta, Eigen::MatrixXd X, Eigen::VectorXd y, std::vector<int> c, double sp, Eigen::MatrixXd S, size_t K);
-RcppExport SEXP _flexl_find_loglikelihood_pen(SEXP thetaSEXP, SEXP XSEXP, SEXP ySEXP, SEXP cSEXP, SEXP spSEXP, SEXP SSEXP, SEXP KSEXP) {
+// find_loglikelihood_pen_with_hess
+NumericVector find_loglikelihood_pen_with_hess(Eigen::VectorXd theta, Eigen::MatrixXd X, Eigen::VectorXd y, std::vector<int> c, double sp, Eigen::MatrixXd S, size_t K);
+RcppExport SEXP _flexl_find_loglikelihood_pen_with_hess(SEXP thetaSEXP, SEXP XSEXP, SEXP ySEXP, SEXP cSEXP, SEXP spSEXP, SEXP SSEXP, SEXP KSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -58,7 +58,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type sp(spSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type S(SSEXP);
     Rcpp::traits::input_parameter< size_t >::type K(KSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_loglikelihood_pen(theta, X, y, c, sp, S, K));
+    rcpp_result_gen = Rcpp::wrap(find_loglikelihood_pen_with_hess(theta, X, y, c, sp, S, K));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,7 +66,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_flexl_find_loglikelihood_pen_noderiv", (DL_FUNC) &_flexl_find_loglikelihood_pen_noderiv, 7},
     {"_flexl_find_loglikelihood_pen_with_grad", (DL_FUNC) &_flexl_find_loglikelihood_pen_with_grad, 7},
-    {"_flexl_find_loglikelihood_pen", (DL_FUNC) &_flexl_find_loglikelihood_pen, 7},
+    {"_flexl_find_loglikelihood_pen_with_hess", (DL_FUNC) &_flexl_find_loglikelihood_pen_with_hess, 7},
     {NULL, NULL, 0}
 };
 

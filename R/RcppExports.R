@@ -9,7 +9,7 @@ find_loglikelihood_pen_with_grad <- function(theta, X, y, c, sp, S, K) {
     .Call(`_flexl_find_loglikelihood_pen_with_grad`, theta, X, y, c, sp, S, K)
 }
 
-find_loglikelihood_pen <- function(theta, X, y, c, sp, S, K) {
-    .Call(`_flexl_find_loglikelihood_pen`, theta, X, y, c, sp, S, K)
+find_loglikelihood_pen_with_hess <- function(theta, X, y, c, sp, S, K) {
+    .Call(`_flexl_find_loglikelihood_pen_with_hess`, theta, X, y, c, sp, S, K)
 }
 

@@ -223,13 +223,13 @@ NumericVector find_loglikelihood_pen_with_grad(Eigen::VectorXd theta,
 
 
 // [[Rcpp::export]]
-NumericVector find_loglikelihood_pen(Eigen::VectorXd theta,
-				     Eigen::MatrixXd X,
-				     Eigen::VectorXd y,
-				     std::vector<int> c,
-				     double sp,
-				     Eigen::MatrixXd S,
-				     size_t K) {
+NumericVector find_loglikelihood_pen_with_hess(Eigen::VectorXd theta,
+					       Eigen::MatrixXd X,
+					       Eigen::VectorXd y,
+					       std::vector<int> c,
+					       double sp,
+					       Eigen::MatrixXd S,
+					       size_t K) {
   // declarations
   double l;
   Eigen::VectorXd grad_l;
