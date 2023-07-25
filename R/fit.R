@@ -16,7 +16,7 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99) {
     for(i in 2:length(sp_poss)) {
         fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1)
         log_ml_poss[i] <- (fits_poss[[i]])[[kmax + 1]]$log_ml
-        if(log_ml_poss[i] < log_ml_poss[i-1]) {
+        if(i > 3 & (log_ml_poss[i] < log_ml_poss[i-1])) {
             lsp_poss <- lsp_poss[1:i]
             break
         }
