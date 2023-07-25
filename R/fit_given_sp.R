@@ -18,7 +18,10 @@ fit_given_sp <- function(data, sp, kmax, nbasis, fve_threshold = 1) {
                 break
         }
     }
-    
+    fits[[k+1]]$hessian <- loglikelihood_pen_hess(fits[[k+1]]$par,
+                                                  X = basis$X, y = data$y, c = data$c - 1,
+                                                  sp = sp, S = basis$S, K = k)
+    fits[[k+1]]$log_ml <- approx_log_ml(fits[[k+1]]$l_pen, fits[[k+1]]$hessian)
     fits
 }
 
@@ -47,15 +50,13 @@ split_par <- function(par, nbasis) {
     split(par, components)
 }
 
-find_fit_info <- function(par, l_pen, hessian, k, basis, sp, data) {
+find_fit_info <- function(par, l_pen, k, basis, sp, data) {
     par_split <- split_par(par, basis$nbasis)
 
 
     f0_x <- basis$X %*% par_split$beta0
     f0 <- find_spline_fun(par_split$beta0, basis)
     
-    log_ml <- approx_log_ml(l_pen, hessian)
-
     if(k > 0) {
         beta <- find_beta(par_split$alpha, basis$nbasis, k)$value
         f_x <- basis$X %*% beta
@@ -70,8 +71,6 @@ find_fit_info <- function(par, l_pen, hessian, k, basis, sp, data) {
          sp = sp,
          par = par,
          l_pen = l_pen,
-         hessian = hessian,
-         log_ml = log_ml,
          beta0 = par_split$beta0,
          alpha = par_split$alpha,
          lsigma = par_split$lsigma,
@@ -96,10 +95,7 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
                  X = basis$X, y = data$y, c = data$c - 1,
                  sp = sp, S = basis$S, K = k,
                  method = "BFGS", control = list(fnscale = -1))
-    opt$hessian <- loglikelihood_pen_hess(opt$par,
-                                          X = basis$X, y = data$y, c = data$c - 1,
-                                          sp = sp, S = basis$S, K = k)
-    fit <- find_fit_info(opt$par, opt$value, opt$hessian, k, basis, sp, data)
+    fit <- find_fit_info(opt$par, opt$value, k, basis, sp, data)
     
     fit
 }
