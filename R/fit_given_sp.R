@@ -47,7 +47,7 @@ split_par <- function(par, nbasis) {
     split(par, components)
 }
 
-find_fit_info <- function(par, l_pen, hessian, k, basis, sp) {
+find_fit_info <- function(par, l_pen, hessian, k, basis, sp, data) {
     par_split <- split_par(par, basis$nbasis)
 
 
@@ -99,7 +99,7 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
     opt$hessian <- loglikelihood_pen_hess(opt$par,
                                           X = basis$X, y = data$y, c = data$c - 1,
                                           sp = sp, S = basis$S, K = k)
-    fit <- find_fit_info(opt$par, opt$value, opt$hessian, k, basis, sp)
+    fit <- find_fit_info(opt$par, opt$value, opt$hessian, k, basis, sp, data)
     
     fit
 }
