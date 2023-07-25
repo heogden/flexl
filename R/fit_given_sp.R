@@ -99,4 +99,3 @@ fit_given_k <- function(data, sp, k, fit_km1, basis) {
     
     fit
 }
-

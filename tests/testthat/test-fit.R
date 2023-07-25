@@ -112,3 +112,46 @@ test_that("error if data has missing values", {
 
 })
 
+
+test_that("gives reasonable fit with tricky blip function", {
+    
+    g1 <- function(x) {
+        dnorm(x, mean = 0.5, sd = 0.05)
+    }
+
+
+    const <- integrate(function(x){g1(x)^2}, lower = 0, upper = 1)$value
+
+    f1 <- function(x) {
+        g1(x) / sqrt(const)
+    }
+    #' so f1 is a normalised version of g
+
+
+    #' Next, generate data
+    
+    set.seed(1)
+
+    n <- 100
+    u <- rnorm(n)
+    n_i <- 10
+    sigma <- 0.01
+    
+    subject <- rep(1:n, each = n_i)
+    t <- runif(n * n_i, 0, 1)
+
+    mu <- u[subject] * f1(t)
+
+    epsilon <- rnorm(n * n_i, sd = sigma)
+    y <- mu + epsilon
+
+    data <- data.frame(x = t,
+                       y = y,
+                       c = subject)
+
+    mod <- fit_flexl(data, nbasis = 30)
+
+    expect_gt(mod$sp, 0.1)
+
+    
+})
