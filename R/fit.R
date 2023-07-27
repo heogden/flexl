@@ -1,22 +1,21 @@
 fit_flexl <- function(data, nbasis = 10, tFVE = 0.99) {
     if(any(is.na(data)))
         stop("There are missing values in the data, which flexl cannot handle")
-    
+
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
     
     lsp_poss <- seq(-5, 10, length.out = 10)
     sp_poss <- exp(lsp_poss)
 
     fits_poss <- list()
-    fits_poss[[1]] <- fit_given_sp(data, sp_poss[1], 10, nbasis, tFVE)
-    kmax <- length(fits_poss[[1]]) - 1
+    fits_poss[[1]] <- fit_given_sp_init(data, sp_poss[1], 10, basis, tFVE)
 
-    log_ml_poss <- c()
-    log_ml_poss[1] <- (fits_poss[[1]])[[kmax + 1]]$log_ml
+    log_ml_poss <- c(fits_poss[[1]]$log_ml)
     
     for(i in 2:length(sp_poss)) {
-        fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1)
-        log_ml_poss[i] <- (fits_poss[[i]])[[kmax + 1]]$log_ml
-        if(i > 3 & (log_ml_poss[i] < log_ml_poss[i-1])) {
+        fits_poss[[i]] <- fit_given_fit_other_sp(data, sp_poss[i], fits_poss[[i-1]], basis)
+        log_ml_poss[i] <- fits_poss[[i]]$log_ml
+        if(i > 2 & (log_ml_poss[i] < log_ml_poss[i-1])) {
             lsp_poss <- lsp_poss[1:i]
             break
         }
@@ -24,12 +23,12 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99) {
 
     #' do we need to add some larger values?
     if(i == length(sp_poss)) {
-        while(log_ml_poss[i] > (log_ml_poss[i-1] + 1)) {
+        while(log_ml_poss[i] > (log_ml_poss[i-1] + 1) & i < 15) {
             lsp_poss <- c(lsp_poss, max(lsp_poss) + 1)
             sp_poss <- exp(lsp_poss)
             i <- i + 1
-            fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1)
-            log_ml_poss[i] <- (fits_poss[[i]])[[kmax + 1]]$log_ml
+            fits_poss[[i]] <- fit_given_fit_other_sp(data, sp_poss[i], fits_poss[[i-1]], basis)
+            log_ml_poss[i] <- fits_poss[[i]]$log_ml
         }
         
     }
@@ -39,10 +38,9 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99) {
     lsp <- opt_out$maximum
     sp <- exp(lsp)
 
-   
-    fit <- fit_given_sp(data, sp, kmax, nbasis, tFVE)
-    FVE <- find_FVE(fit)
-    index <- which(find_FVE(fit) > tFVE)[1]
-    fit[[index]]                    
+    id_closest <- which.min(abs(lsp_poss - lsp))
+
+    ## TODO: should also consider whether we can reduce K
+    fit_given_fit_other_sp(data, sp, fits_poss[[i]], basis)                   
 }
 

@@ -199,10 +199,6 @@ test_that("gives reasonable fit with tricky blip function", {
     }
 
     plot(lsp_poss, log_ml_poss, type = "l")
-    #' the log marginal likelihood seems a bit unstable.
-    #' Can this be improved?
-    #' Yes, smoother now that we allow more iterations
-
     #' what happens if we try to use parameter estimates from
     #' first sp as starting points?
 
@@ -212,10 +208,16 @@ test_that("gives reasonable fit with tricky blip function", {
 
     fit_sp1 <-  fits_poss[[1]][[length(fits_poss[[1]])]]
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
+    
     system.time(fit_without_sp1 <- fit_given_sp(data, sp, kmax, nbasis, 1))
-    system.time(fit_using_sp1 <- fit_given_other_sp(data, sp, fit_sp1, basis))
+    
 
+    system.time(fit_using_sp1 <- fit_given_fit_other_sp(data, sp, fit_sp1, basis))
 
+    fit_sp4 <-  fits_poss[[4]][[length(fits_poss[[4]])]]
+    system.time(fit_using_sp4 <- fit_given_fit_other_sp(data, sp_poss[4] + 1, fit_sp4, basis))
+
+    
     fit_without_sp1[[3]]$opt
     fit_using_sp1$opt
     #' still needs to do a lot of runs, even using sp1
@@ -234,7 +236,7 @@ test_that("gives reasonable fit with tricky blip function", {
     fit_par_pred <- fit_sp1
     fit_par_pred$par <- par_pred
     
-    system.time(fit_using_par_pred <- fit_given_other_sp(data, sp, fit_par_pred, basis))
+    system.time(fit_using_par_pred <- fit_given_fit_other_sp(data, sp, fit_par_pred, basis))
     fit_using_par_pred$opt
 
     system.time(H <- loglikelihood_pen_hess(fit_sp1$par, basis$X, data$y, data$c - 1, sp, basis$S, kmax))

@@ -1,31 +1,37 @@
+add_hessian_and_log_ml <- function(fit, basis, data) {
+    fit$hessian <- loglikelihood_pen_hess(fit$par,
+                                          X = basis$X, y = data$y, c = data$c - 1,
+                                          sp = fit$sp, S = basis$S, K = fit$k)
+    fit$log_ml <- approx_log_ml(fit$l_pen, fit$hessian)
+    fit
+}
+
+
 #' @param data a data frame
 #' @param sp the smoothing parameter
 #' @param kmax the maximum number of variation functions to use
 #' @param nbasis the number of spline basis functions to use
 #' @param fve_threshold the threshold on fraction of variation explained, used to choose the number of variation functions
-fit_given_sp <- function(data, sp, kmax, nbasis, fve_threshold = 1) {
-    #' find the basis to use
-    basis <- find_orthogonal_spline_basis(nbasis, data$x)
+fit_given_sp_init <- function(data, sp, kmax, basis, fve_threshold = 1) {
     fits <- list()
     #' fit the mean-only model (k = 0)
-    fits[[1]] <- fit_given_k(data, sp, 0, NULL, basis)
+    fits[[1]] <- fit_given_fit_km1(data, sp, 0, NULL, basis)
     
     #' fit with k variation functions, fixing mean and first k-1 functions
     if(kmax > 0) {
         for(k in 1:kmax) {
-            fits[[k+1]] <- fit_given_k(data, sp, k, fits[[k]], basis)
-            if(find_FVE(fits)[k] > fve_threshold)
+            fits[[k+1]] <- fit_given_fit_km1(data, sp, k, fits[[k]], basis)
+            if(k > 1 & find_FVE(fits)[k] > fve_threshold) {
+                k <- k-1
                 break
+            }
         }
     }
 
-    k <- length(fits) - 1
-    fits[[k+1]]$hessian <- loglikelihood_pen_hess(fits[[k+1]]$par,
-                                                  X = basis$X, y = data$y, c = data$c - 1,
-                                                  sp = sp, S = basis$S, K = k)
-    fits[[k+1]]$log_ml <- approx_log_ml(fits[[k+1]]$l_pen, fits[[k+1]]$hessian)
-    fits
+    fit <- fits[[k+1]]
+    add_hessian_and_log_ml(fit, basis, data)
 }
+
 
 find_FVE <- function(fits) {
     sigmas <- sapply(fits, "[[", "sigma")
@@ -97,9 +103,11 @@ fit_given_par0 <- function(data, sp, k, par0, basis) {
                  method = "BFGS", control = list(fnscale = -1, maxit = 10000))
     if(opt$convergence != 0)
         warning("optim has not converged")
-    fit <- find_fit_info(opt, k, basis, sp, data)
+     fit <- find_fit_info(opt, k, basis, sp, data)
+
+     cat("after optim call, count = ", opt$count, ", value = ", opt$value, "\n")
     
-    fit
+     fit
 }
 
 #' fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
@@ -109,16 +117,68 @@ fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis) {
    
 }
 
+#' using a fixed hessian H
+optim_quasi_NR <- function(par0, H, sp, basis, k, grad_tol = 1e-3) {
+    cat("starting optim_quasi_NR, sp = ", sp, "\n")
+    par_prev <- par0
+    value_prev <- loglikelihood_pen(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
+
+    grad_prev <- loglikelihood_pen_grad(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
+
+    count <- 1
+
+    convergence <- 1
+    continue <- TRUE
+
+    H_inv <- try(solve(H), TRUE)
+    if(!is.matrix(H_inv))
+        return(list(par = par0, value = value_prev, counts = c(count, count), convergence = 1))
+    
+    while(continue) {
+        par <- par_prev - H_inv %*% grad_prev
+        value <- loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
+
+        grad <- loglikelihood_pen_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
+
+        count <- count + 1
+        if(mean(abs(grad)) < grad_tol) {
+            convergence <- 0
+            continue <- FALSE
+        }
+        if(value <= value_prev) {
+            continue <- FALSE
+            par <- par_prev
+            value <- value_prev
+        }
+        if(mean(abs(grad)) > 0.9 * mean(abs(grad_prev))) {
+           continue <- FALSE
+        }
+        if(continue) {
+            par_prev <- par
+            value_prev <- value
+            grad_prev <- grad
+        }
+    }
+    cat("after optim_quasi_NR, count = ", count, ", value =", value, "\n")
+    list(par = par, value = value, counts = c(count, count), convergence = convergence)
+}
+
+
 #' fit model, given fit_other_sp with same k but different sp
 fit_given_fit_other_sp <- function(data, sp, fit_other_sp, basis) {
     k <- fit_other_sp$k
     H <- fit_other_sp$hessian
 
     
-    #' using hessian from fit_other_sp, do one step of Newton-Raphson to find par0
-    g <- loglikelihood_pen_grad(fit_other_sp$par, basis$X, data$y, data$c - 1, sp, basis$S, k)
-    par0 <- fit_other_sp$par - solve(H, g)
+    #' using hessian from fit_other_sp, do steps of Newton-Raphson with hessian H
+    opt <- optim_quasi_NR(fit_other_sp$par, H, sp, basis, k)
 
-    fit_given_par(data, sp, k, par0, basis)
+    if(opt$convergence != 0) {
+        fit <- fit_given_par0(data, sp, k, opt$par, basis)
+    } else {
+        fit <- find_fit_info(opt, k, basis, sp, data)
+    }
+    
+    add_hessian_and_log_ml(fit, basis, data)
 }
 
