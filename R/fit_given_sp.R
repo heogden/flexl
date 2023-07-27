@@ -18,6 +18,8 @@ fit_given_sp <- function(data, sp, kmax, nbasis, fve_threshold = 1) {
                 break
         }
     }
+
+    k <- length(fits) - 1
     fits[[k+1]]$hessian <- loglikelihood_pen_hess(fits[[k+1]]$par,
                                                   X = basis$X, y = data$y, c = data$c - 1,
                                                   sp = sp, S = basis$S, K = k)
@@ -50,7 +52,9 @@ split_par <- function(par, nbasis) {
     split(par, components)
 }
 
-find_fit_info <- function(par, l_pen, k, basis, sp, data) {
+find_fit_info <- function(opt, k, basis, sp, data) {
+    par <- opt$par
+    l_pen <- opt$value
     par_split <- split_par(par, basis$nbasis)
 
 
@@ -71,6 +75,7 @@ find_fit_info <- function(par, l_pen, k, basis, sp, data) {
          sp = sp,
          par = par,
          l_pen = l_pen,
+         opt = opt,
          beta0 = par_split$beta0,
          alpha = par_split$alpha,
          lsigma = par_split$lsigma,
@@ -85,17 +90,35 @@ find_fit_info <- function(par, l_pen, k, basis, sp, data) {
     
 }
 
-
-#' @param k the number of variation functions to use 
-fit_given_k <- function(data, sp, k, fit_km1, basis) {
-
-    par0 <- find_par0(fit_km1, k, basis$nbasis)        
-    
-    opt <- optim(par0, loglikelihood_pen, loglikelihood_pen_grad,
+fit_given_par0 <- function(data, sp, k, par0, basis) {
+     opt <- optim(par0, loglikelihood_pen, loglikelihood_pen_grad,
                  X = basis$X, y = data$y, c = data$c - 1,
                  sp = sp, S = basis$S, K = k,
-                 method = "BFGS", control = list(fnscale = -1))
-    fit <- find_fit_info(opt$par, opt$value, k, basis, sp, data)
+                 method = "BFGS", control = list(fnscale = -1, maxit = 10000))
+    if(opt$convergence != 0)
+        warning("optim has not converged")
+    fit <- find_fit_info(opt, k, basis, sp, data)
     
     fit
 }
+
+#' fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
+fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis) {
+    par0 <- find_par0(fit_km1, k, basis$nbasis)        
+    fit_given_par0(data, sp, k, par0, basis)
+   
+}
+
+#' fit model, given fit_other_sp with same k but different sp
+fit_given_fit_other_sp <- function(data, sp, fit_other_sp, basis) {
+    k <- fit_other_sp$k
+    H <- fit_other_sp$hessian
+
+    
+    #' using hessian from fit_other_sp, do one step of Newton-Raphson to find par0
+    g <- loglikelihood_pen_grad(fit_other_sp$par, basis$X, data$y, data$c - 1, sp, basis$S, k)
+    par0 <- fit_other_sp$par - solve(H, g)
+
+    fit_given_par(data, sp, k, par0, basis)
+}
+
