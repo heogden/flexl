@@ -153,133 +153,28 @@ test_that("gives reasonable fit with tricky blip function", {
                        y = y,
                        c = subject)
 
-
-
     
     mod <- fit_flexl(data, nbasis = 30)
 
-    expect_gt(mod$sp, 0.1)
 
+    library(tidyverse)
 
-    nbasis <- 30
-    tFVE <- 0.99
-    
-    lsp_poss <- seq(-5, 10, length.out = 10)
-    sp_poss <- exp(lsp_poss)
-    
-    nbasis <- 30
-    kmax <- 2
-    sp <- sp_poss[1]
-    
-    fit_sp1 <- fit_given_sp(data, sp, kmax, nbasis)
-
-    fit_sp1[[1]]$opt
-    ## Problem here: didn't previously converge, have now upped maxit
-    fit_sp1[[2]]$opt
-    ## Continue from here: do we now get better log_ml 
+    pred_data<- crossing(x = seq(0, 1, length.out = 100),
+                         c = 1:n) %>%
+        mutate(mu = u[c] * f1(x)) %>%
+        group_by(c) %>%
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])))
 
     
+    rmse <- sqrt(mean(pred_data$mu_hat - pred_data$mu)^2)
+    expect_lt(rmse, 0.1)
 
-    
-
-    fits_poss <- list()
-    fits_poss[[1]] <- fit_given_sp(data, sp_poss[1], 10, nbasis, tFVE)
-    kmax <- length(fits_poss[[1]]) - 1
-
-    log_ml_poss <- c()
-    log_ml_poss[1] <- (fits_poss[[1]])[[kmax + 1]]$log_ml
-    
-    for(i in 2:length(sp_poss)) {
-        fits_poss[[i]] <- fit_given_sp(data, sp_poss[i], kmax, nbasis, 1)
-        log_ml_poss[i] <- (fits_poss[[i]])[[kmax + 1]]$log_ml
-        #f(i > 3 & (log_ml_poss[i] < log_ml_poss[i-1])) {
-        #   lsp_poss <- lsp_poss[1:i]
-        #   break
-        #
-    }
-
-    plot(lsp_poss, log_ml_poss, type = "l")
-    #' what happens if we try to use parameter estimates from
-    #' first sp as starting points?
-
-    sp <- sp_poss[2]
-
-    fit_orig <- fits_poss[[2]][[length(fits_poss[[2]])]]
-
-    fit_sp1 <-  fits_poss[[1]][[length(fits_poss[[1]])]]
-    basis <- find_orthogonal_spline_basis(nbasis, data$x)
-    
-    system.time(fit_without_sp1 <- fit_given_sp(data, sp, kmax, nbasis, 1))
-    
-
-    system.time(fit_using_sp1 <- fit_given_fit_other_sp(data, sp, fit_sp1, basis))
-
-    fit_sp4 <-  fits_poss[[4]][[length(fits_poss[[4]])]]
-    system.time(fit_using_sp4 <- fit_given_fit_other_sp(data, sp_poss[4] + 1, fit_sp4, basis))
-
-    
-    fit_without_sp1[[3]]$opt
-    fit_using_sp1$opt
-    #' still needs to do a lot of runs, even using sp1
-    #' would using hessian information help?
-    #' could get better starting point?
-    g_sp2 <-  loglikelihood_pen_grad(fit_sp1$par, basis$X, data$y, data$c - 1, sp, basis$S, kmax)
-
-    par_diff_pred <- -solve(H, g_sp2)
-
-    par_diff_real <- fit_using_sp1$par - fit_sp1$par
-
-    plot(par_diff_pred, par_diff_real, xlim = c(-0.1, 0.02), ylim = c(-0.1, 0.02))
-    abline(a = 0, b = 1)
-
-    par_pred <- fit_sp1$par + par_diff_pred
-    fit_par_pred <- fit_sp1
-    fit_par_pred$par <- par_pred
-    
-    system.time(fit_using_par_pred <- fit_given_fit_other_sp(data, sp, fit_par_pred, basis))
-    fit_using_par_pred$opt
-
-    system.time(H <- loglikelihood_pen_hess(fit_sp1$par, basis$X, data$y, data$c - 1, sp, basis$S, kmax))
-    
-
-    
-    
-    fit_orig$l_pen
-    fit_using_sp1$l_pen
-
-    #' they have different penalised loglikelihoods.
-    #' (but now quite similar)
-    #' probably reduced costs a lot in using other fit: check this
-
-    curve(fit_using_sp1$f0(x), from = 0, to = 1)
-    curve(fit_orig$f0(x), lty = 2, add = TRUE)
-    #' something could be going wrong with estimating mean function?
-    #' actually here, true mean is zero, so not clear which one is wrong
-
-    curve(fit_using_sp1$f(x)[,1], from = 0, to = 1)
-    curve(f1, lty = 2, add = TRUE)
-    #' we don't have scaling here
-
-    curve(fit_orig$f(x)[,1], from = 0, to = 1)
-    curve(f1, lty = 2, add = TRUE)
-    #' we don't have right scaling here?
-
-
-    curve(fit_orig$f(x)[,1], from = 0, to = 1)
-    curve(fit_using_sp1$f(x)[,1], from = 0, to = 1, col = 2, add = TRUE)
-    #' very different scales.
-
-    sd(fit_orig$u[,1])
-    sd(fit_orig$u[,2])
-    cor(fit_orig$u[,1], fit_orig$u[,2])
-    
-    sd(fit_using_sp1$u[,1])
-    sd(fit_using_sp1$u[,2])
-    cor(fit_using_sp1$u[,1], fit_using_sp1$u[,2])
-
-    #' These should be close to 1, 1, 0: something has gone wrong here.
-
-    
+    pred_data %>%
+        filter(c <= 20) %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat)) +
+        geom_line(aes(y = mu), linetype = "dashed") +
+        facet_wrap(vars(c))
     
     
 })
