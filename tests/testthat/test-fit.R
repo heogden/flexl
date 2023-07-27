@@ -178,3 +178,37 @@ test_that("gives reasonable fit with tricky blip function", {
     
     
 })
+
+test_that("fits the sleepstudy data", {
+    library(lme4)
+    data <- sleepstudy %>%
+        as_tibble %>%
+        mutate(c = as.integer(as.factor(Subject)),
+               y = Reaction,
+               x = Days)
+    mod <- fit_flexl(data)
+
+    nbasis <- 10
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
+    
+    lsp_poss <- seq(-5, 10, length.out = 10)
+    sp_poss <- exp(lsp_poss)
+
+    fits_poss <- list()
+    fits_poss[[1]] <- fit_given_sp_init(data, sp_poss[1], 10, basis, tFVE)
+
+    sp <- sp_poss[1]
+    kmax <- 10
+    tFVE <- 0.99
+    
+    fits <- list()
+    #' fit the mean-only model (k = 0)
+    fits[[1]] <- fit_given_fit_km1(data, sp, 0, NULL, basis)
+    #' failing to fit well for k = 0
+    #' (getting HUGE variance estimate)
+
+    
+    
+    
+    
+})
