@@ -15,7 +15,7 @@ add_hessian_and_log_ml <- function(fit, basis, data) {
 fit_given_sp_init <- function(data, sp, kmax, basis, fve_threshold = 1) {
     fits <- list()
     #' fit the mean-only model (k = 0)
-    fits[[1]] <- fit_given_fit_km1(data, sp, 0, NULL, basis)
+    fits[[1]] <- fit_0(data, sp, basis)
     
     #' fit with k variation functions, fixing mean and first k-1 functions
     if(kmax > 0) {
@@ -26,8 +26,10 @@ fit_given_sp_init <- function(data, sp, kmax, basis, fve_threshold = 1) {
                 break
             }
         }
+    } else {
+        k <- kmax
     }
-
+    
     fit <- fits[[k+1]]
     add_hessian_and_log_ml(fit, basis, data)
 }
@@ -35,8 +37,10 @@ fit_given_sp_init <- function(data, sp, kmax, basis, fve_threshold = 1) {
 
 find_FVE <- function(fits) {
     sigmas <- sapply(fits, "[[", "sigma")
+    cat("sigmas = ", sigmas, "\n")
     resid_var <- min(sigmas^2)
     non_resid_var <- sigmas^2 - resid_var
+    cat("FVE = ", 1 - non_resid_var / non_resid_var[1], "\n")
     1 - non_resid_var / non_resid_var[1]
 }
 
@@ -116,12 +120,17 @@ fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis) {
 }
 
 #' using a fixed hessian H
-optim_quasi_NR <- function(par0, H, sp, basis, k, grad_tol = 1e-3) {
+optim_quasi_NR <- function(par0, H, sp, basis, k, data, grad_tol = 1e-3) {
     par_prev <- par0
     value_prev <- loglikelihood_pen(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
 
     grad_prev <- loglikelihood_pen_grad(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
 
+    cat("par_prev = ", par_prev, "\n")
+    cat("value_prev = ", value_prev, "\n")
+    cat("grad_prev = ", grad_prev, "\n")
+
+    
     count <- 1
 
     convergence <- 1
@@ -138,23 +147,38 @@ optim_quasi_NR <- function(par0, H, sp, basis, k, grad_tol = 1e-3) {
         grad <- loglikelihood_pen_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
 
         count <- count + 1
+
+        cat("par = ", par, "\n")
+        cat("value = ", value, "\n")
+        cat("grad = ", grad, "\n")
+        cat("mean(abs(grad)) = ", mean(abs(grad)), "\n")
+
+        if(any(!is.finite(grad))) {
+            convergence <- 0
+            continue <- FALSE
+            par <- par_prev
+            value <- value_prev
+            break
+        }
+        
         if(mean(abs(grad)) < grad_tol) {
             convergence <- 0
             continue <- FALSE
+            break
         }
         if(value <= value_prev) {
             continue <- FALSE
             par <- par_prev
             value <- value_prev
+            break
         }
         if(mean(abs(grad)) > 0.9 * mean(abs(grad_prev))) {
-           continue <- FALSE
+            continue <- FALSE
+            break
         }
-        if(continue) {
-            par_prev <- par
-            value_prev <- value
-            grad_prev <- grad
-        }
+        par_prev <- par
+        value_prev <- value
+        grad_prev <- grad
     }
     list(par = par, value = value, counts = c(count, count), convergence = convergence)
 }
@@ -167,7 +191,7 @@ fit_given_fit_other_sp <- function(data, sp, fit_other_sp, basis) {
 
     
     #' using hessian from fit_other_sp, do steps of Newton-Raphson with hessian H
-    opt <- optim_quasi_NR(fit_other_sp$par, H, sp, basis, k)
+    opt <- optim_quasi_NR(fit_other_sp$par, H, sp, basis, k, data)
 
     if(opt$convergence != 0) {
         fit <- fit_given_par0(data, sp, k, opt$par, basis)
@@ -177,4 +201,25 @@ fit_given_fit_other_sp <- function(data, sp, fit_other_sp, basis) {
     
     add_hessian_and_log_ml(fit, basis, data)
 }
+
+
+
+#' Fit the mean-only model
+fit_0 <- function(data, sp, basis) {
+    X_0 <- basis$X
+    
+    Xt_y <- crossprod(X_0, data$y)
+    XtX <- crossprod(X_0, X_0)
+
+    
+    beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
+    y_hat_0 <- X_0 %*% beta_0
+    resid <- data$y - y_hat_0
+    sigma <- sd(resid)
+
+    par0 <- c(beta_0, log(sigma))
+    
+    fit_given_par0(data, sp, 0, par0, basis)
+}
+
 

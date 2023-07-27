@@ -181,34 +181,58 @@ test_that("gives reasonable fit with tricky blip function", {
 
 test_that("fits the sleepstudy data", {
     library(lme4)
+    
     data <- sleepstudy %>%
         as_tibble %>%
         mutate(c = as.integer(as.factor(Subject)),
                y = Reaction,
                x = Days)
-    mod <- fit_flexl(data)
 
-    nbasis <- 10
-    basis <- find_orthogonal_spline_basis(nbasis, data$x)
-    
-    lsp_poss <- seq(-5, 10, length.out = 10)
-    sp_poss <- exp(lsp_poss)
+    data_norm <- data
+    data_norm$y <- (data$y - mean(data$y)) / sd(data$y)
+    data_norm$x <- (data$x - mean(data$x)) / sd(data$x)
 
-    fits_poss <- list()
-    fits_poss[[1]] <- fit_given_sp_init(data, sp_poss[1], 10, basis, tFVE)
+    nbasis <- 15
+    mod <- fit_flexl(data_norm, nbasis = nbasis)
 
-    sp <- sp_poss[1]
-    kmax <- 10
-    tFVE <- 0.99
-    
-    fits <- list()
-    #' fit the mean-only model (k = 0)
-    fits[[1]] <- fit_given_fit_km1(data, sp, 0, NULL, basis)
-    #' failing to fit well for k = 0
-    #' (getting HUGE variance estimate)
+    #' should almost certainly drop k smaller,
+    #' once we prefer a very large smoothing par
 
+    x_pred_data <- crossing(x = seq(from = min(data_norm$x),
+                                    to = max(data_norm$x),
+                                    length.out = 100),
+                            c = unique(data_norm$c))
+
+    pred_data <- x_pred_data  %>%
+        group_by(c) %>%
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])))
     
+    pred_data %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat)) +
+        geom_point(aes(x = x, y = y), data = data_norm) +
+        facet_wrap(vars(c))
+
+    basis <- find_orthogonal_spline_basis(nbasis, data_norm$x)
+    mod_check <- fit_given_sp_init(data_norm, mod$sp, 10, basis, fve_threshold = 0.99)
+    mod_check$k
+    #' truly only k = 2 component present
+
+    #' test out manual changes to sp
+
+    mod_sp <- fit_given_sp_init(data_norm, 10, 10, basis, fve_threshold = 0.99)
+    mod_sp$k
+    pred_data <- x_pred_data  %>%
+        group_by(c) %>%
+        mutate(mu_hat = predict_flexl(mod_sp, newdata = list(x = x, c = c[1])))
     
-    
+    pred_data %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat)) +
+        geom_point(aes(x = x, y = y), data = data_norm) +
+        facet_wrap(vars(c))
+
+   #' Are we really picking the best smoothing parameter here?
+
     
 })

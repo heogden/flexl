@@ -11,10 +11,13 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99) {
     fits_poss[[1]] <- fit_given_sp_init(data, sp_poss[1], 10, basis, tFVE)
 
     log_ml_poss <- c(fits_poss[[1]]$log_ml)
+
     
     for(i in 2:length(sp_poss)) {
         fits_poss[[i]] <- fit_given_fit_other_sp(data, sp_poss[i], fits_poss[[i-1]], basis)
         log_ml_poss[i] <- fits_poss[[i]]$log_ml
+        cat("i = ", i, "\n")
+        cat("log_ml_poss = ", log_ml_poss, "\n")
         if(i > 2 & (log_ml_poss[i] < log_ml_poss[i-1])) {
             lsp_poss <- lsp_poss[1:i]
             break
