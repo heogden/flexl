@@ -104,8 +104,6 @@ fit_given_par0 <- function(data, sp, k, par0, basis) {
     if(opt$convergence != 0)
         warning("optim has not converged")
      fit <- find_fit_info(opt, k, basis, sp, data)
-
-     cat("after optim call, count = ", opt$count, ", value = ", opt$value, "\n")
     
      fit
 }
@@ -119,7 +117,6 @@ fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis) {
 
 #' using a fixed hessian H
 optim_quasi_NR <- function(par0, H, sp, basis, k, grad_tol = 1e-3) {
-    cat("starting optim_quasi_NR, sp = ", sp, "\n")
     par_prev <- par0
     value_prev <- loglikelihood_pen(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
 
@@ -159,7 +156,6 @@ optim_quasi_NR <- function(par0, H, sp, basis, k, grad_tol = 1e-3) {
             grad_prev <- grad
         }
     }
-    cat("after optim_quasi_NR, count = ", count, ", value =", value, "\n")
     list(par = par, value = value, counts = c(count, count), convergence = convergence)
 }
 
