@@ -181,6 +181,7 @@ test_that("gives reasonable fit with tricky blip function", {
 
 test_that("fits the sleepstudy data", {
     library(lme4)
+    library(tidyverse)
     
     data <- sleepstudy %>%
         as_tibble %>%
@@ -192,11 +193,9 @@ test_that("fits the sleepstudy data", {
     data_norm$y <- (data$y - mean(data$y)) / sd(data$y)
     data_norm$x <- (data$x - mean(data$x)) / sd(data$x)
 
+    #' TODO: automatically normalise data for numerical stability.
     nbasis <- 15
     mod <- fit_flexl(data_norm, nbasis = nbasis)
-
-    #' should almost certainly drop k smaller,
-    #' once we prefer a very large smoothing par
 
     x_pred_data <- crossing(x = seq(from = min(data_norm$x),
                                     to = max(data_norm$x),
@@ -213,14 +212,9 @@ test_that("fits the sleepstudy data", {
         geom_point(aes(x = x, y = y), data = data_norm) +
         facet_wrap(vars(c))
 
-    basis <- find_orthogonal_spline_basis(nbasis, data_norm$x)
-    mod_check <- fit_given_sp_init(data_norm, mod$sp, 10, basis, fve_threshold = 0.99)
-    mod_check$k
-    #' truly only k = 2 component present
-
     #' test out manual changes to sp
-
-    mod_sp <- fit_given_sp_init(data_norm, 10, 10, basis, fve_threshold = 0.99)
+    basis <- find_orthogonal_spline_basis(nbasis, data_norm$x)
+    mod_sp <- fit_given_sp_init(data_norm, 100, 10, basis, fve_threshold = 0.99)
     mod_sp$k
     pred_data <- x_pred_data  %>%
         group_by(c) %>%
@@ -232,7 +226,12 @@ test_that("fits the sleepstudy data", {
         geom_point(aes(x = x, y = y), data = data_norm) +
         facet_wrap(vars(c))
 
-   #' Are we really picking the best smoothing parameter here?
+    #' Are we really picking the best smoothing parameter here?
+    #' Is this k = 4, sp = 100, fit not better than k = 2, sp = "Inf" fit above?
+    #' Are we comparing them fairly?
+
+    #' If we fix (e.g.) k = 4, what does log-marginal likelihood look like
+    #' for different sp? Can we compute it?
 
     
 })
