@@ -90,3 +90,23 @@ generate_test_data_2 <- function() {
          eta_fun = eta_fun)
 }
 
+generate_test_data_0 <- function() {
+    mu <- function(x) {
+        sin(2 * pi * x)
+    }
+    
+    set.seed(1)
+    d <- 50
+    n_c <- 10
+    n <- d * n_c
+    c <- rep(1:d, each = n_c) 
+    x <- runif(n)
+
+    m <- mu(x)
+    
+    sigma <- 0.1
+    y <- m + rnorm(n, sd = sigma)
+
+    list(data = data.frame(c = c, x = x, y = y),
+         mu = mu)
+}
