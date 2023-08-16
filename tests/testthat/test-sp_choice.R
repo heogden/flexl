@@ -11,3 +11,47 @@ test_that("log_ml contribs are correct", {
 
     expect_equal(log_ml_contrib, log_ml_contrib_man)
 })
+
+test_that("matches log ML formula for gam in k = 0 case", {
+    data_full <- generate_test_data_2()
+    data <- data_full$data
+
+    sp <- 100
+    nbasis <- 10
+
+    basis <- find_orthogonal_spline_basis(nbasis, data$x)
+    S <- basis$S
+
+    mod_0 <- fit_given_sp_init(data, 0, 0, basis)
+    M <- 2
+    l_hat <- mod_0$l_pen
+
+
+    #' replicate (6.21) from Wood (2017), with error fixed
+    find_log_ml_0 <- function(sp) {
+        mod <- fit_given_sp_init(data, sp, 0, basis)
+        sigma2 <- exp(2 * mod$lsigma)
+        phi <- sigma2
+        S_lop <- S * sp / phi
+    
+        H <- mod$hessian
+        beta_hat <- mod$beta0
+    
+        l_hat - emulator::quad.form(S_lop, beta_hat) / 2 +
+            log_det_gen(S_lop, nbasis - 2) / 2 - log_det(H) / 2 + M/2 * log(2 * pi)
+    }
+
+
+    sp_poss <- seq(0.1, 20, length.out = 100)
+    log_ml_0_poss <- sapply(sp_poss, find_log_ml_0)
+    
+    plot(sp_poss, log_ml_0_poss, type = "l")
+
+    sp_hat <- optimize(find_log_ml_0, interval = c(0, 20), maximum = TRUE)$maximum
+    #' seems reasonable (but starts to increase again if look at v large sp)
+    #' maybe the Laplace approximation is less good for very large sp values?
+    
+    
+    
+
+})
