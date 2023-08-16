@@ -233,5 +233,49 @@ test_that("fits the sleepstudy data", {
     #' If we fix (e.g.) k = 4, what does log-marginal likelihood look like
     #' for different sp? Can we compute it?
 
+    mod_sp_big_4 <- fit_given_sp_init(data_norm, mod$sp, 4, basis, fve_threshold = 1)
+    mod_sp_100_4 <- fit_given_sp_init(data_norm, 100, 4, basis, fve_threshold = 1)
+    mod_sp_1000_4 <- fit_given_sp_init(data_norm, 1000, 4, basis, fve_threshold = 1)
+    mod_sp_huge_4 <- fit_given_sp_init(data_norm, 10 * mod$sp, 4, basis, fve_threshold = 1)
+
+    #' if we multiply try at (100 * mod$sp), log_ml goes negative: fitting problems 
     
+    mod_sp_huge_4$log_ml
+    mod_sp_big_4$log_ml 
+    mod_sp_1000_4$log_ml
+    mod_sp_100_4$log_ml
+
+    #' how do the fits themselves compare, for big (mod$sp) vs. huge (10 * mod$sp)?
+    pred_data <- x_pred_data  %>%
+        group_by(c) %>%
+        mutate(mu_hat_big = predict_flexl(mod_sp_big_4, newdata = list(x = x, c = c[1])),
+               mu_hat_huge = predict_flexl(mod_sp_huge_4, newdata = list(x = x, c = c[1])))
+
+    pred_data %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat_big)) +
+        geom_line(aes(y = mu_hat_huge), colour = "red") +
+        geom_point(aes(x = x, y = y), data = data_norm) +
+        facet_wrap(vars(c))
+    #' why is mu_hat_huge preferred here? It is doing a bad job fitting to the data.
+
+    #' what are the components of loglikelihood and penalty (wiggliness) at
+    par_big <- mod_sp_big_4$par
+
+    lp_fun <- function(par, sp) {
+        loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, 4)
+    }
+
+    l_big <- lp_fun(par_big, 0)
+    l_huge
+    
+    par_huge <- mod_sp_huge_4$par
+
+    
+    pred_data %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat)) +
+        geom_point(aes(x = x, y = y), data = data_norm) +
+        facet_wrap(vars(c))
+
 })
