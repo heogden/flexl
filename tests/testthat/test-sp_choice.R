@@ -68,6 +68,8 @@ test_that("Log ML not always increasing with k", {
 
     expect_gt(max(log_ml_0_poss_curr), max(log_ml_1_poss_curr))
     #' demonstration of where current approach to log ML is failing
+
+
     
     #' generate data with truth k = 2
     data2 <- generate_test_data_2()$data
@@ -81,4 +83,46 @@ test_that("Log ML not always increasing with k", {
     lines(sp_poss, log_ml_1_poss, lty = 2)
 
     expect_gt(max(log_ml_1_poss), max(log_ml_0_poss))
+
+
+    sp <- 2
+
+    nbasis <- 10
+    basis <- find_orthogonal_spline_basis(nbasis, data2$x)
+    S <- basis$S
+    
+    mod <- fit_given_sp_init(data2, sp, 3, basis)
+    #' find example T (may not match exactly)
+
+    beta <- mod$beta
+
+    #' finding transform for k
+    k <- 4
+    Q <- qr.Q(qr(beta[,1:(k-1),drop = FALSE]), complete = TRUE)
+    T <- Q[,-(1:(k-1)), drop = FALSE]
+
+    S_k <- t(T) %*% S %*% T
+
+    library(Matrix)
+    rankMatrix(S)
+    rankMatrix(S_k)
+    #' rank(S_k) = min(rank(S), nrow(S_k)) = min(n_B - 2, n_B - k + 1)
+    #' so rank(S_k) = n_B - 2 for k = 1, 2,
+    #'                n_B - (k-1) for k = 3, ....
+    #' we need n_B > k-1 for this to make sense
+    #' so always take k < n_B + 1, i.e. k <= n_B
+
+    r_k <- min(nbasis - 2, nbasis - k + 1)
+    
+    log_det_gen(S_k, r_k)
+    log_det_gen(S, nbasis - 2)
+    #' close if k = 2 (could be numerical error)
+
+    evs_S <- eigen(S, symmetric = TRUE, only.values = TRUE)$values
+    evs <- eigen(S_k, symmetric = TRUE, only.values = TRUE)$values
+
+    log(evs_S[1:r_k]) - log(evs)
+    #' most of the difference comes in last component for k = 3
+    
+    log_det_gen(S_k, r_k) - log_det_gen(S, nbasis - 2)
 })
