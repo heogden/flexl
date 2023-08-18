@@ -97,11 +97,26 @@ test_that("Log ML not always increasing with k", {
     beta <- mod$beta
 
     #' finding transform for k
-    k <- 4
+    k <- 3
+
+    #; TODO: need to use actual definition of T here
     Q <- qr.Q(qr(beta[,1:(k-1),drop = FALSE]), complete = TRUE)
     T <- Q[,-(1:(k-1)), drop = FALSE]
+    #############################
 
     S_k <- t(T) %*% S %*% T
+    alpha <- mod$alpha
+    k_prev <- (k-1) * nbasis - sum(1:(k-2))
+    alpha_k <- alpha[k_prev + (1:(nbasis - (k-1)))]
+
+    beta_k <- beta[,k]
+    qform_beta <- emulator::quad.form(S, beta_k)
+    alpha_k <- mod$alpha
+
+    qform_alpha <- emulator::quad.form(S_k, alpha_k)
+
+    expect_equal(qform_alpha, qform_beta)
+    
 
     library(Matrix)
     rankMatrix(S)
