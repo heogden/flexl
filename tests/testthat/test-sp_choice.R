@@ -77,19 +77,17 @@ test_that("Log ML not always increasing with k", {
     plot(range(sp_poss), range(c(log_ml_0_poss, log_ml_0_poss_curr)), type = "n")
     lines(sp_poss, log_ml_0_poss)
     lines(sp_poss, log_ml_0_poss_curr, lty = 2)
-    #' two results the same!
-
 
     plot(range(sp_poss), range(c(log_ml_1_poss, log_ml_1_poss_curr)), type = "n")
     lines(sp_poss, log_ml_1_poss)
     lines(sp_poss, log_ml_1_poss_curr, lty = 2)
-    #' two results different, but similar. Where is the difference?
+    #' two results the same!
 
 
     #' Look at one sp
-    sp <- 2
-    find_log_ml_curr(sp, 0, data0, nbasis)
-    find_log_ml(sp, 0, data0, nbasis)
+    sp <- 0.5
+    find_log_ml_curr(sp, 1, data0, nbasis)
+    find_log_ml(sp, 1, data0, nbasis)
     #' next: look at individual terms here
     
     #' generate data with truth k = 2
