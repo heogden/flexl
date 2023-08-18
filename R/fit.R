@@ -1,6 +1,6 @@
-try_reducing_k <- function(i, sp_poss, fits_poss, log_ml_poss, data, kmax, basis, tFVE) {
-    #' TODO: could write a better method for refitting with all smaller k
-    mod_sp <- fit_given_sp_init(data, sp_poss[i], kmax, basis, fve_threshold = tFVE)
+
+try_reducing_k <- function(i, sp_poss, fits_poss, log_ml_poss, data, basis, tFVE) {
+    mod_sp <- refit_with_smaller_k(fits_poss[[i]], data, sp_poss[i], basis, fve_threshold = tFVE)
 
     if(mod_sp$k < fits_poss[[i]]$k) {
         fits_poss[[i]] <- mod_sp
@@ -35,7 +35,7 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99, kmax = 10) {
             break
         }
         if(log_ml_poss[i] > log_ml_poss[i-1]) {
-            out <- try_reducing_k(i, sp_poss, fits_poss, log_ml_poss, data, kmax, basis, tFVE)
+            out <- try_reducing_k(i, sp_poss, fits_poss, log_ml_poss, data, basis, tFVE)
             fits_poss <- out$fits_poss
             log_ml_poss <- out$log_ml_poss
         }
@@ -54,7 +54,7 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99, kmax = 10) {
             log_ml_poss[i] <- fits_poss[[i]]$log_ml
             if(log_ml_poss[i] > log_ml_poss[i-1]) {
                 continue <- FALSE
-                out <- try_reducing_k(i, sp_poss, fits_poss, log_ml_poss, data, kmax, basis, tFVE)
+                out <- try_reducing_k(i, sp_poss, fits_poss, log_ml_poss, data, basis, tFVE)
                 fits_poss <- out$fits_poss
                 log_ml_poss <- out$log_ml_poss
             }

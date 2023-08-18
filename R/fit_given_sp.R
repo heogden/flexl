@@ -35,6 +35,7 @@ fit_given_sp_init <- function(data, sp, kmax, basis, fve_threshold = 1) {
 }
 
 
+
 find_FVE <- function(fits) {
     sigmas <- sapply(fits, "[[", "sigma")
     resid_var <- min(sigmas^2)
@@ -211,3 +212,42 @@ fit_0 <- function(data, sp, basis) {
 }
 
 
+find_par0_given_fit_kp1 <- function(fit_kp1, k, nbasis) {
+    alpha_kp1_components <- find_alpha_components(nbasis, k+1)
+    alpha_k <-  fit_kp1$alpha[alpha_kp1_components != (k+1)]
+    
+    c(fit_kp1$beta0, alpha_k, fit_kp1$lsigma)
+}
+
+
+#' fit model with k eigenfunctions, given model fit with k + 1 eigenfunctions, same sp
+fit_given_fit_kp1 <- function(data, sp, k, fit_kp1, basis) {
+    par0 <- find_par0_given_fit_kp1(fit_kp1, k, basis$nbasis)        
+    fit_given_par0(data, sp, k, par0, basis)
+   
+}
+
+refit_with_smaller_k <- function(mod, data, sp, basis, fve_threshold) {
+    fits <- list()
+    fits[[mod$k + 1]] <- mod
+    
+    if(mod$k > 1) {
+        for(k in (mod$k - 1):1) {
+            fits[[k+1]] <- fit_given_fit_kp1(data, sp, k, fits[[k+2]], basis)
+        }
+    }
+    fits[[1]] <- fit_0(data, sp, basis)
+
+    FVE <- find_FVE(fits)
+    
+    k <- min((0:mod$k)[FVE > fve_threshold])
+
+    if(k < mod$k) {
+        fit <- fits[[k]]
+        fit <- add_hessian_and_log_ml(fit, basis, data)
+    } else {
+        fit <- mod
+    }
+    
+    fit
+}
