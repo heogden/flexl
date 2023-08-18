@@ -25,11 +25,6 @@ correct_lprior_alpha <- function(fit, basis) {
 #' Laplace approximate log-marginal likelihood
 approx_log_ml <- function(fit, hessian, basis) {
     p <- nrow(hessian)
-    cat("terms are: \n")
-    cat("l_pen = ", fit$l_pen, "\n")
-    cat("correction = ", correct_lprior_alpha(fit, basis), "\n")
-    cat("p/2 * log(2*pi) = ",  p/2 * log(2*pi), "\n")
-    cat("1/2 * log_det(hessian) = ", 1/2 * log_det(hessian), "\n")
     fit$l_pen + correct_lprior_alpha(fit, basis) + p/2 * log(2*pi) - 1/2 * log_det(hessian)
 }
 
