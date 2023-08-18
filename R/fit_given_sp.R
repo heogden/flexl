@@ -37,10 +37,8 @@ fit_given_sp_init <- function(data, sp, kmax, basis, fve_threshold = 1) {
 
 find_FVE <- function(fits) {
     sigmas <- sapply(fits, "[[", "sigma")
-    cat("sigmas = ", sigmas, "\n")
     resid_var <- min(sigmas^2)
     non_resid_var <- sigmas^2 - resid_var
-    cat("FVE = ", 1 - non_resid_var / non_resid_var[1], "\n")
     1 - non_resid_var / non_resid_var[1]
 }
 
