@@ -28,8 +28,30 @@ test_that("Log ML not always increasing with k", {
     expect_gt(max(log_ml_0_poss), max(log_ml_1_poss))
     expect_gt(max(log_ml_1_poss), max(log_ml_2_poss))
 
+    #' generate data with truth k = 2 (straight lines, expect large sp)
+    data1 <- generate_test_data_1()$data
     
-    #' generate data with truth k = 2
+    sp_poss <- seq(0.01, 1000, length.out = 100)
+    log_ml_0_poss <- sapply(sp_poss, find_log_ml, k = 0, data = data1, nbasis = nbasis)
+    log_ml_1_poss <- sapply(sp_poss, find_log_ml, k = 1, data = data1, nbasis = nbasis)
+    log_ml_2_poss <- sapply(sp_poss, find_log_ml, k = 2, data = data1, nbasis = nbasis)
+    log_ml_3_poss <- sapply(sp_poss, find_log_ml, k = 3, data = data1, nbasis = nbasis)
+
+    plot(range(sp_poss),
+         range(c(log_ml_0_poss, log_ml_1_poss, log_ml_2_poss, log_ml_3_poss)), type = "n")
+    lines(sp_poss, log_ml_0_poss)
+    lines(sp_poss, log_ml_1_poss, lty = 2)
+    lines(sp_poss, log_ml_2_poss, lty = 3)
+    lines(sp_poss, log_ml_3_poss, lty = 4)
+
+
+    expect_gt(max(log_ml_1_poss), max(log_ml_0_poss))
+    expect_gt(max(log_ml_2_poss), max(log_ml_1_poss))
+    expect_gte(max(log_ml_2_poss), max(log_ml_3_poss))
+
+
+    
+    #' generate data with truth k = 2 (not straight lines)
     data2 <- generate_test_data_2()$data
     
     sp_poss <- seq(0.01, 10, length.out = 100)
