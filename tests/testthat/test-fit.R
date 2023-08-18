@@ -195,7 +195,12 @@ test_that("fits the sleepstudy data", {
 
     #' TODO: automatically normalise data for numerical stability.
     nbasis <- 15
-    mod <- fit_flexl(data_norm, nbasis = nbasis, tFVE = 0.999)
+    mod <- fit_flexl(data_norm, nbasis = nbasis, tFVE = 0.99)
+
+    #' NOTE: there seems to be a problem here, as mod$log_ml is -249.408,.
+    #' while printed log_ml at closest point is -158.5504
+
+    mod_3 <- fit_flexl(data_norm, nbasis = nbasis, tFVE = 1, kmax = 3)
 
     x_pred_data <- crossing(x = seq(from = min(data_norm$x),
                                     to = max(data_norm$x),

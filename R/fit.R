@@ -77,6 +77,6 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99, kmax = 10) {
     id_closest <- which.min(abs(lsp_poss - lsp))
 
     ## TODO: should also consider whether we can reduce K
-    fit_given_fit_other_sp(data, sp, fits_poss[[i]], basis)                   
+    fit_given_fit_other_sp(data, sp, fits_poss[[id_closest]], basis)                   
 }
 

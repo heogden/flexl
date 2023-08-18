@@ -240,10 +240,10 @@ refit_with_smaller_k <- function(mod, data, sp, basis, fve_threshold) {
 
     FVE <- find_FVE(fits)
     
-    k <- min((0:mod$k)[FVE > fve_threshold])
+    k <- min((0:mod$k)[FVE >= fve_threshold])
 
     if(k < mod$k) {
-        fit <- fits[[k]]
+        fit <- fits[[k+1]]
         fit <- add_hessian_and_log_ml(fit, basis, data)
     } else {
         fit <- mod
