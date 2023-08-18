@@ -5,6 +5,7 @@ correct_lprior_alpha <- function(fit, basis) {
     }
     
     S <- basis$S
+    nbasis <- basis$nbasis
     contrib <- c()
 
     for(j in 0:k) {
