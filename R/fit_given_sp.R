@@ -125,11 +125,6 @@ optim_quasi_NR <- function(par0, H, sp, basis, k, data, grad_tol = 1e-3) {
     value_prev <- loglikelihood_pen(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
 
     grad_prev <- loglikelihood_pen_grad(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
-
-    cat("par_prev = ", par_prev, "\n")
-    cat("value_prev = ", value_prev, "\n")
-    cat("grad_prev = ", grad_prev, "\n")
-
     
     count <- 1
 
@@ -147,11 +142,6 @@ optim_quasi_NR <- function(par0, H, sp, basis, k, data, grad_tol = 1e-3) {
         grad <- loglikelihood_pen_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
 
         count <- count + 1
-
-        cat("par = ", par, "\n")
-        cat("value = ", value, "\n")
-        cat("grad = ", grad, "\n")
-        cat("mean(abs(grad)) = ", mean(abs(grad)), "\n")
 
         if(any(!is.finite(grad))) {
             convergence <- 0
