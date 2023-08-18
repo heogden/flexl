@@ -2,7 +2,7 @@ add_hessian_and_log_ml <- function(fit, basis, data) {
     fit$hessian <- loglikelihood_pen_hess(fit$par,
                                           X = basis$X, y = data$y, c = data$c - 1,
                                           sp = fit$sp, S = basis$S, K = fit$k)
-    fit$log_ml <- approx_log_ml(fit$l_pen, fit$hessian)
+    fit$log_ml <- approx_log_ml(fit$l_pen, fit$hessian, basis)
     fit
 }
 

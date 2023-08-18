@@ -115,6 +115,10 @@ test_that("Log ML not always increasing with k", {
     qform_alpha <- emulator::quad.form(S_k, alpha_k)
 
     expect_equal(qform_alpha, qform_beta)
+
+    S_k_los2 <- sp / mod$sigma^2 * S_k
+    log_det_gen(S_k_los2, r_k)
+    (log_det_gen(S_k, r_k) + r_k * (log(sp) - 2 * mod$lsigma))
     
 
     library(Matrix)
