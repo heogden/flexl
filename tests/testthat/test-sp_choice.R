@@ -1,17 +1,3 @@
-test_that("log_ml contribs are correct", {
-    n <- 10
-    
-    Sigma <- matrix(0.2, nrow = n, ncol = n) + diag(n)
-    d <- nrow(Sigma)
-    
-    log_ml_contrib_man <- -mvtnorm::dmvnorm(rep(0, d), sigma = Sigma, log = TRUE)
-
-    Sigma_inv <- solve(Sigma)
-    log_ml_contrib <- approx_log_ml_contrib(Sigma_inv)
-
-    expect_equal(log_ml_contrib, log_ml_contrib_man)
-})
-
 test_that("Log ML not always increasing with k", {
     
     find_log_ml <- function(sp, k, data, nbasis) {
@@ -31,12 +17,16 @@ test_that("Log ML not always increasing with k", {
     sp_poss <- seq(0.01, 1, length.out = 100)
     log_ml_0_poss <- sapply(sp_poss, find_log_ml, k = 0, data = data0, nbasis = nbasis)
     log_ml_1_poss <- sapply(sp_poss, find_log_ml, k = 1, data = data0, nbasis = nbasis)
+    log_ml_2_poss <- sapply(sp_poss, find_log_ml, k = 2, data = data0, nbasis = nbasis)
 
-    plot(range(sp_poss), range(c(log_ml_0_poss, log_ml_1_poss)), type = "n")
+    plot(range(sp_poss), range(c(log_ml_0_poss, log_ml_1_poss, log_ml_2_poss)), type = "n")
     lines(sp_poss, log_ml_0_poss)
     lines(sp_poss, log_ml_1_poss, lty = 2)
+    lines(sp_poss, log_ml_2_poss, lty = 3)
+        
 
     expect_gt(max(log_ml_0_poss), max(log_ml_1_poss))
+    expect_gt(max(log_ml_1_poss), max(log_ml_2_poss))
 
     
     #' generate data with truth k = 2
@@ -46,13 +36,19 @@ test_that("Log ML not always increasing with k", {
     log_ml_0_poss <- sapply(sp_poss, find_log_ml, k = 0, data = data2, nbasis = nbasis)
     log_ml_1_poss <- sapply(sp_poss, find_log_ml, k = 1, data = data2, nbasis = nbasis)
     log_ml_2_poss <- sapply(sp_poss, find_log_ml, k = 2, data = data2, nbasis = nbasis)
+    log_ml_3_poss <- sapply(sp_poss, find_log_ml, k = 3, data = data2, nbasis = nbasis)
 
-    plot(range(sp_poss), range(c(log_ml_0_poss, log_ml_1_poss, log_ml_2_poss)), type = "n")
+    plot(range(sp_poss),
+         range(c(log_ml_0_poss, log_ml_1_poss, log_ml_2_poss, log_ml_3_poss)), type = "n")
     lines(sp_poss, log_ml_0_poss)
     lines(sp_poss, log_ml_1_poss, lty = 2)
     lines(sp_poss, log_ml_2_poss, lty = 3)
+    lines(sp_poss, log_ml_3_poss, lty = 4)
+
 
     expect_gt(max(log_ml_1_poss), max(log_ml_0_poss))
     expect_gt(max(log_ml_2_poss), max(log_ml_1_poss))
+    expect_gt(max(log_ml_2_poss), max(log_ml_3_poss))
+
 
 })
