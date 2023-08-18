@@ -39,9 +39,15 @@ test_that("Log ML not always increasing with k", {
 
         r <- nbasis - 2
         
+        cat("terms are: \n")
+        cat("l_pen = ", mod$l_pen, "\n")
+        cat("correction = ", (k+1) * log_det_gen(S_lop, r) / 2 - (k+1)*r/2 * log(2 * pi), "\n")
+        cat("p/2 * log(2*pi) = ",  (length(mod$par))/2 * log(2 * pi), "\n")
+        cat("1/2 * log_det(-hessian) = ", - log_det(H)/2, "\n")
+        
         mod$l_pen - log_det(H)/2 +
             (k+1) * log_det_gen(S_lop, r) / 2  +
-            (length(mod$par) - (k+1)*r) * log(2 * pi)
+            (length(mod$par) - (k+1)*r)/2 * log(2 * pi)
     }
 
     nbasis <- 10
@@ -67,9 +73,24 @@ test_that("Log ML not always increasing with k", {
     lines(sp_poss, log_ml_1_poss_curr, lty = 2)
 
     expect_gt(max(log_ml_0_poss_curr), max(log_ml_1_poss_curr))
-    #' demonstration of where current approach to log ML is failing
+
+    plot(range(sp_poss), range(c(log_ml_0_poss, log_ml_0_poss_curr)), type = "n")
+    lines(sp_poss, log_ml_0_poss)
+    lines(sp_poss, log_ml_0_poss_curr, lty = 2)
+    #' two results the same!
 
 
+    plot(range(sp_poss), range(c(log_ml_1_poss, log_ml_1_poss_curr)), type = "n")
+    lines(sp_poss, log_ml_1_poss)
+    lines(sp_poss, log_ml_1_poss_curr, lty = 2)
+    #' two results different, but similar. Where is the difference?
+
+
+    #' Look at one sp
+    sp <- 2
+    find_log_ml_curr(sp, 0, data0, nbasis)
+    find_log_ml(sp, 0, data0, nbasis)
+    #' next: look at individual terms here
     
     #' generate data with truth k = 2
     data2 <- generate_test_data_2()$data

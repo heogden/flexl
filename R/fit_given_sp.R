@@ -2,7 +2,7 @@ add_hessian_and_log_ml <- function(fit, basis, data) {
     fit$hessian <- loglikelihood_pen_hess(fit$par,
                                           X = basis$X, y = data$y, c = data$c - 1,
                                           sp = fit$sp, S = basis$S, K = fit$k)
-    fit$log_ml <- approx_log_ml(fit$l_pen, fit$hessian, basis)
+    fit$log_ml <- approx_log_ml(fit, fit$hessian, basis)
     fit
 }
 
@@ -72,7 +72,7 @@ find_fit_info <- function(opt, k, basis, sp, data) {
     f0 <- find_spline_fun(par_split$beta0, basis)
     
     if(k > 0) {
-        beta <- find_beta(par_split$alpha, basis$nbasis, k)$value
+        beta <- find_beta(par_split$alpha, basis$nbasis, k)
         f_x <- basis$X %*% beta
         u_hat <- find_u_hat(exp(par_split$lsigma), data, f0_x, f_x)
         f <- find_spline_fun(beta, basis)
