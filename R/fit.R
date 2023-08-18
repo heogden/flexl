@@ -1,3 +1,17 @@
+try_reducing_k <- function(i, data, sp_poss, fits_poss, log_ml_poss) {
+    #' TODO: could write a better method for refitting with all smaller k
+    mod_sp <- fit_given_sp_init(data, sp_poss[i], kmax, basis, fve_threshold = tFVE)
+
+    if(mod_sp$k < fits_poss[[i]]$k) {
+        fits_poss[[i]] <- mod_sp
+        log_ml_poss[i] <- mod_sp$log_ml
+        log_ml_poss[1:(i-1)] <- NA
+    }
+    list(fits_poss = fits_poss,
+         log_ml_poss = log_ml_poss)
+}
+
+
 fit_flexl <- function(data, nbasis = 10, tFVE = 0.99, kmax = 10) {
     if(any(is.na(data)))
         stop("There are missing values in the data, which flexl cannot handle")
@@ -21,14 +35,9 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99, kmax = 10) {
             break
         }
         if(log_ml_poss[i] > log_ml_poss[i-1]) {
-            #' consider whether we should reduce k
-            #' TODO: could write a better method for refitting with all smaller k
-            mod_sp <- fit_given_sp_init(data, sp_poss[i], kmax, basis, fve_threshold = tFVE)
-            if(mod_sp$k < fits_poss[[i]]$k) {
-                fits_poss[[i]] <- mod_sp
-                log_ml_poss[i] <- mod_sp$log_ml
-                log_ml_poss[1:(i-1)] <- NA
-            }
+            out <- try_reducing_k(i, data, sp_poss, fits_poss, log_ml_poss)
+            fits_poss <- out$fits_poss
+            log_ml_poss <- out$log_ml_poss
         }
 
     }
@@ -43,15 +52,11 @@ fit_flexl <- function(data, nbasis = 10, tFVE = 0.99, kmax = 10) {
             i <- i + 1
             fits_poss[[i]] <- fit_given_fit_other_sp(data, sp_poss[i], fits_poss[[i-1]], basis)
             log_ml_poss[i] <- fits_poss[[i]]$log_ml
-            #' TODO: avoid copy-paste from above: put this in separate function
             if(log_ml_poss[i] > log_ml_poss[i-1]) {
                 continue <- FALSE
-                mod_sp <- fit_given_sp_init(data, sp_poss[i], kmax, basis, fve_threshold = tFVE)
-                if(mod_sp$k < fits_poss[[i]]$k) {
-                    fits_poss[[i]] <- mod_sp
-                    log_ml_poss[i] <- mod_sp$log_ml
-                    log_ml_poss[1:(i-1)] <- NA
-                }
+                out <- try_reducing_k(i, data, sp_poss, fits_poss, log_ml_poss)
+                fits_poss <- out$fits_poss
+                log_ml_poss <- out$log_ml_poss
             }
         }
         
