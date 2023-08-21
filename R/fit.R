@@ -1,5 +1,5 @@
 fit_flexl <- function(data, nbasis = 10, kmax = 10,
-                      lsp_poss = -5:15) {
+                      lsp_poss = -5:15, trace = FALSE) {
     if(any(is.na(data)))
         stop("There are missing values in the data, which flexl cannot handle")
 
@@ -12,7 +12,8 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
     
     for(i in seq_along(sp_poss)) {
         sp <- sp_poss[i]
-        cat("sp = ", sp, "\n")
+        if(trace)
+            cat("sp = ", sp, "\n")
         if(i == 1)
             fits_other_sp <- NULL
         else
@@ -26,10 +27,12 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
                
 
         fits_list[[i]] <- fits
-  
-        cat("k = ", fit$k, "\n")
+                                        
+        if(trace)
+            cat("k = ", fit$k, "\n")
         fit <- add_hessian_and_log_ml(fit, basis, data)
-        cat("log_ml = ", fit$log_ml, "\n")
+        if(trace)
+            cat("log_ml = ", fit$log_ml, "\n")
         fit_sp_poss[[i]] <- fit
 
         if(i > 2)
