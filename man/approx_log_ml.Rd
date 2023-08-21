@@ -2,10 +2,10 @@
 % Please edit documentation in R/sp_choice.R
 \name{approx_log_ml}
 \alias{approx_log_ml}
-\title{approx log marginal likelihood for the last fit in the list}
+\title{Laplace approximate log-marginal likelihood}
 \usage{
-approx_log_ml(fits)
+approx_log_ml(fit, hessian, basis)
 }
 \description{
-approx log marginal likelihood for the last fit in the list
+Laplace approximate log-marginal likelihood
 }

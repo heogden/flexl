@@ -2,10 +2,22 @@
 % Please edit documentation in R/fit.R
 \name{fit_flexl}
 \alias{fit_flexl}
-\title{do we need to add some larger values?}
+\title{start with first sp and k = 0
+increase k until optimise log ML, for smallest sp
+increase sp to next value
+then check if we can decrease k. Continue decreasing k until
+we optimize log ML
+check if we have found a better log_ML at this value of sp
+than we had found at previous value}
 \usage{
-fit_flexl(data, nbasis = 10)
+fit_flexl(data, nbasis = 10, kmax = 10, lsp_poss = -5:15)
 }
 \description{
-do we need to add some larger values?
+start with first sp and k = 0
+increase k until optimise log ML, for smallest sp
+increase sp to next value
+then check if we can decrease k. Continue decreasing k until
+we optimize log ML
+check if we have found a better log_ML at this value of sp
+than we had found at previous value
 }
