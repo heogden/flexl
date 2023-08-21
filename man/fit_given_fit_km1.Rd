@@ -4,7 +4,7 @@
 \alias{fit_given_fit_km1}
 \title{fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp}
 \usage{
-fit_given_fit_km1(data, sp, k, fit_km1, basis)
+fit_given_fit_km1(data, sp, k, fit_km1, basis, fit_k_other_sp = NULL)
 }
 \description{
 fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
