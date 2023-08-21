@@ -26,12 +26,15 @@ find_fit_info <- function(opt, k, basis, sp, data) {
     
     if(k > 0) {
         beta <- find_beta(par_split$alpha, basis$nbasis, k)
+        lambda <- colSums(beta^2)
         f_x <- basis$X %*% beta
         u_hat <- find_u_hat(exp(par_split$lsigma), data, f0_x, f_x)
         f <- find_spline_fun(beta, basis)
     } else {
         f <- NULL
         u_hat <- NULL
+        beta <- NULL
+        lambda <- NULL
     }
 
     list(k = k,
@@ -46,7 +49,8 @@ find_fit_info <- function(opt, k, basis, sp, data) {
          sigma = exp(par_split$lsigma),
          f0 = f0,
          f = f,
-         u_hat = u_hat)
+         u_hat = u_hat,
+         lambda = lambda)
     
     
     
@@ -61,7 +65,6 @@ fit_given_par0 <- function(data, sp, k, par0, basis) {
     if(opt$convergence != 0)
         warning("optim has not converged")
      fit <- find_fit_info(opt, k, basis, sp, data)
-     fit <- add_hessian_and_log_ml(fit, basis, data)
     
      fit
 }
@@ -85,115 +88,53 @@ fit_0 <- function(data, sp, basis) {
 }
 
 
-#' using a fixed hessian H
-optim_quasi_NR <- function(par0, H, sp, basis, k, data, grad_tol = 1e-3) {
-    par_prev <- par0
-    value_prev <- loglikelihood_pen(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
 
-    grad_prev <- loglikelihood_pen_grad(par_prev, basis$X, data$y, data$c - 1, sp, basis$S, k)
-    
-    count <- 1
-
-    convergence <- 1
-    continue <- TRUE
-
-    H_inv <- try(solve(H), TRUE)
-    if(!is.matrix(H_inv))
-        return(list(par = par0, value = value_prev, counts = c(count, count), convergence = 1))
-    
-    while(continue) {
-        par <- par_prev - H_inv %*% grad_prev
-        value <- loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
-
-        grad <- loglikelihood_pen_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
-
-        count <- count + 1
-
-        if(any(!is.finite(grad))) {
-            convergence <- 0
-            continue <- FALSE
-            par <- par_prev
-            value <- value_prev
-            break
-        }
-        
-        if(mean(abs(grad)) < grad_tol) {
-            convergence <- 0
-            continue <- FALSE
-            break
-        }
-        if(value <= value_prev) {
-            continue <- FALSE
-            par <- par_prev
-            value <- value_prev
-            break
-        }
-        if(mean(abs(grad)) > 0.9 * mean(abs(grad_prev))) {
-            continue <- FALSE
-            break
-        }
-        par_prev <- par
-        value_prev <- value
-        grad_prev <- grad
-    }
-    list(par = par, value = value, counts = c(count, count), convergence = convergence)
-}
-
-
-
-
-
-#' fit model, given fit_other_sp with same k but different sp
-fit_given_fit_other_sp <- function(data, sp, fit_other_sp, basis) {
-    k <- fit_other_sp$k
-    H <- fit_other_sp$hessian
-
-    
-    #' using hessian from fit_other_sp, do steps of Newton-Raphson with hessian H
-    opt <- optim_quasi_NR(fit_other_sp$par, H, sp, basis, k, data)
-
-    if(opt$convergence != 0) {
-        fit <- fit_given_par0(data, sp, k, opt$par, basis)
-    } else {
-        fit <- find_fit_info(opt, k, basis, sp, data)
-    }
-    
-    add_hessian_and_log_ml(fit, basis, data)
-}
-
-
-
-find_par0_given_fit_km1 <- function(fit_km1, k, nbasis) {
+find_par0_given_fit_km1 <- function(fit_km1, k, nbasis, fit_k_other_sp = NULL) {
     if(k == 0) {
-        return(c(rep(0.01, nbasis), 0))
+        if(is.null(fit_k_other_sp))
+            return(c(rep(0.01, nbasis), 0))
+        else
+            return(fit_k_other_sp$par)
     }
-    alpha_k0 <- rep(0.01, nbasis - k + 1)
+    if(is.null(fit_k_other_sp))
+        alpha_k0 <- rep(0.01, nbasis - k + 1)
+    else
+        alpha_k0 <- fit_k_other_sp$alpha[find_alpha_components(nbasis, k) == k]
 
     c(fit_km1$beta0, fit_km1$alpha, alpha_k0, fit_km1$lsigma)
 }
 
 
 #' fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
-fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis) {
-    par0 <- find_par0_given_fit_km1(fit_km1, k, basis$nbasis)        
+fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis, fit_k_other_sp = NULL) {
+    par0 <- find_par0_given_fit_km1(fit_km1, k, basis$nbasis, fit_k_other_sp)        
     fit_given_par0(data, sp, k, par0, basis)
    
 }
 
 
+find_FVE <- function(mod) {
+    cumsum(mod$lambda) / sum(mod$lambda)
+}
 
-find_par0_given_fit_kp1 <- function(fit_kp1, k, nbasis) {
-    alpha_kp1_components <- find_alpha_components(nbasis, k+1)
-    alpha_k <-  fit_kp1$alpha[alpha_kp1_components != (k+1)]
+
+is_k_larger_than_required <- function(mod) {
+    tol <- 1e-3
+    FVE <-  find_FVE(mod)
+    FVE[length(FVE) - 1] > 1 - tol
+}
+
+
+fits_given_sp <- function(sp, kmax, data, basis, fits_other_sp = NULL) {
+    if(is.null(fits_other_sp)) 
+        fits_other_sp <- replicate(kmax + 1, NULL)
     
-    c(fit_kp1$beta0, alpha_k, fit_kp1$lsigma)
+    fits <- list(fit_0(data, sp, basis))
+    for(k in 1:kmax) {
+        fits[[k+1]] <- fit_given_fit_km1(data, sp, k, fits[[k]], basis, fits_other_sp[[k+1]])
+        if(k > 1)
+            if(is_k_larger_than_required(fits[[k+1]]))
+                break
+    }
+    fits
 }
-
-
-#' fit model with k eigenfunctions, given model fit with k + 1 eigenfunctions, same sp
-fit_given_fit_kp1 <- function(data, sp, k, fit_kp1, basis) {
-    par0 <- find_par0_given_fit_kp1(fit_kp1, k, basis$nbasis)        
-    fit_given_par0(data, sp, k, par0, basis)
-   
-}
-
