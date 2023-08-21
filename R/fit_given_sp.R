@@ -7,52 +7,6 @@ add_hessian_and_log_ml <- function(fit, basis, data) {
 }
 
 
-#' @param data a data frame
-#' @param sp the smoothing parameter
-#' @param kmax the maximum number of variation functions to use
-#' @param nbasis the number of spline basis functions to use
-#' @param fve_threshold the threshold on fraction of variation explained, used to choose the number of variation functions
-fit_given_sp_init <- function(data, sp, kmax, basis, fve_threshold = 1) {
-    fits <- list()
-    #' fit the mean-only model (k = 0)
-    fits[[1]] <- fit_0(data, sp, basis)
-    
-    #' fit with k variation functions, fixing mean and first k-1 functions
-    if(kmax > 0) {
-        for(k in 1:kmax) {
-            fits[[k+1]] <- fit_given_fit_km1(data, sp, k, fits[[k]], basis)
-            if(k > 1 & find_FVE(fits)[k] > fve_threshold) {
-                k <- k-1
-                break
-            }
-        }
-    } else {
-        k <- kmax
-    }
-    
-    fit <- fits[[k+1]]
-    add_hessian_and_log_ml(fit, basis, data)
-}
-
-
-
-find_FVE <- function(fits) {
-    sigmas <- sapply(fits, "[[", "sigma")
-    resid_var <- min(sigmas^2)
-    non_resid_var <- sigmas^2 - resid_var
-    1 - non_resid_var / non_resid_var[1]
-}
-
-
-find_par0 <- function(fit_km1, k, nbasis) {
-    if(k == 0) {
-        return(c(rep(0.01, nbasis), 0))
-    }
-    alpha_k0 <- rep(0.01, nbasis - k + 1)
-
-    c(fit_km1$beta0, fit_km1$alpha, alpha_k0, fit_km1$lsigma)
-}
-
 
 split_par <- function(par, nbasis) {
     components <- rep("alpha", length(par))
@@ -107,16 +61,29 @@ fit_given_par0 <- function(data, sp, k, par0, basis) {
     if(opt$convergence != 0)
         warning("optim has not converged")
      fit <- find_fit_info(opt, k, basis, sp, data)
+     fit <- add_hessian_and_log_ml(fit, basis, data)
     
      fit
 }
 
-#' fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
-fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis) {
-    par0 <- find_par0(fit_km1, k, basis$nbasis)        
-    fit_given_par0(data, sp, k, par0, basis)
-   
+#' Fit the mean-only model
+fit_0 <- function(data, sp, basis) {
+    X_0 <- basis$X
+    
+    Xt_y <- crossprod(X_0, data$y)
+    XtX <- crossprod(X_0, X_0)
+
+    
+    beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
+    y_hat_0 <- X_0 %*% beta_0
+    resid <- data$y - y_hat_0
+    sigma <- sd(resid)
+
+    par0 <- c(beta_0, log(sigma))
+    
+    fit_given_par0(data, sp, 0, par0, basis)
 }
+
 
 #' using a fixed hessian H
 optim_quasi_NR <- function(par0, H, sp, basis, k, data, grad_tol = 1e-3) {
@@ -173,6 +140,9 @@ optim_quasi_NR <- function(par0, H, sp, basis, k, data, grad_tol = 1e-3) {
 }
 
 
+
+
+
 #' fit model, given fit_other_sp with same k but different sp
 fit_given_fit_other_sp <- function(data, sp, fit_other_sp, basis) {
     k <- fit_other_sp$k
@@ -193,23 +163,23 @@ fit_given_fit_other_sp <- function(data, sp, fit_other_sp, basis) {
 
 
 
-#' Fit the mean-only model
-fit_0 <- function(data, sp, basis) {
-    X_0 <- basis$X
-    
-    Xt_y <- crossprod(X_0, data$y)
-    XtX <- crossprod(X_0, X_0)
+find_par0_given_fit_km1 <- function(fit_km1, k, nbasis) {
+    if(k == 0) {
+        return(c(rep(0.01, nbasis), 0))
+    }
+    alpha_k0 <- rep(0.01, nbasis - k + 1)
 
-    
-    beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
-    y_hat_0 <- X_0 %*% beta_0
-    resid <- data$y - y_hat_0
-    sigma <- sd(resid)
-
-    par0 <- c(beta_0, log(sigma))
-    
-    fit_given_par0(data, sp, 0, par0, basis)
+    c(fit_km1$beta0, fit_km1$alpha, alpha_k0, fit_km1$lsigma)
 }
+
+
+#' fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
+fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis) {
+    par0 <- find_par0_given_fit_km1(fit_km1, k, basis$nbasis)        
+    fit_given_par0(data, sp, k, par0, basis)
+   
+}
+
 
 
 find_par0_given_fit_kp1 <- function(fit_kp1, k, nbasis) {
@@ -227,27 +197,3 @@ fit_given_fit_kp1 <- function(data, sp, k, fit_kp1, basis) {
    
 }
 
-refit_with_smaller_k <- function(mod, data, sp, basis, fve_threshold) {
-    fits <- list()
-    fits[[mod$k + 1]] <- mod
-    
-    if(mod$k > 1) {
-        for(k in (mod$k - 1):1) {
-            fits[[k+1]] <- fit_given_fit_kp1(data, sp, k, fits[[k+2]], basis)
-        }
-    }
-    fits[[1]] <- fit_0(data, sp, basis)
-
-    FVE <- find_FVE(fits)
-    
-    k <- min((0:mod$k)[FVE >= fve_threshold])
-
-    if(k < mod$k) {
-        fit <- fits[[k+1]]
-        fit <- add_hessian_and_log_ml(fit, basis, data)
-    } else {
-        fit <- mod
-    }
-    
-    fit
-}
