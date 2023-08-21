@@ -25,7 +25,8 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
     cat(", log_ml = ", fits_poss[[id]]$log_ml, "\n")
     
 
-    #' increase k until optimise log ML, for smallest sp
+    
+    #' increase k until no change in sigma, for smallest sp
     continue <- TRUE
     while(continue) {
         id_prev <- id
@@ -34,9 +35,11 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
         id <- ids_k_sp[id_k, id_sp]
         cat("(fit_given_fit_km1) fit: k = ", k, "sp = ", sp)
         fits_poss[[id]] <- fit_given_fit_km1(data, sp, k, fits_poss[[id_prev]], basis)
+        cat(", sigma = ", fits_poss[[id]]$sigma)
         cat(", log_ml = ", fits_poss[[id]]$log_ml, "\n")
-            
-        if(fits_poss[[id]]$log_ml <= fits_poss[[id_prev]]$log_ml) {
+        
+        tol <- 1e-5
+        if(fits_poss[[id]]$sigma/fits_poss[[id_prev]]$sigma > (1 - tol)) {
             id_k <- id_k - 1
             id <- id_prev
             continue <- FALSE
@@ -59,11 +62,11 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
         k <- k_poss[id_k]
         cat("(fit_given_fit_other_sp) fit: k = ", k, "sp = ", sp)
         fits_poss[[id]] <- fit_given_fit_other_sp(data, sp, fits_poss[[id_prev_outer]], basis)
+        cat(", sigma = ", fits_poss[[id]]$sigma)
         cat(", log_ml = ", fits_poss[[id]]$log_ml, "\n")
         
 
-        #' then check if we can decrease k. Continue decreasing k until
-        #' we optimize log ML
+        #' then check if we can decrease k, without making sigma smaller
         continue <- TRUE
         while(continue) {
             id_prev <- id
@@ -72,9 +75,12 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
             id <- ids_k_sp[id_k, id_sp]
             cat("(fit_given_fit_kp1) fit: k = ", k, "sp = ", sp)
             fits_poss[[id]] <- fit_given_fit_kp1(data, sp, k, fits_poss[[id_prev]], basis)
+            cat(", sigma = ", fits_poss[[id]]$sigma)
             cat(", log_ml = ", fits_poss[[id]]$log_ml, "\n")
-                            
-            if(fits_poss[[id]]$log_ml < fits_poss[[id_prev]]$log_ml) {
+
+
+            
+            if(fits_poss[[id_prev]]$sigma/fits_poss[[id]]$sigma < (1 - tol)) {
                 id_k <- id_k + 1
                 id <- id_prev
                 continue <- FALSE
@@ -83,18 +89,30 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
                 continue <- FALSE
             }
         }
+
+  
+        
         #' check if we have found a better log_ML at this value of sp
-        #' than we had found at previous value
-        if(fits_poss[[id]]$log_ml <= fits_poss[[id_prev_outer]]$log_ml) {
-            continue_sp <- FALSE
-            id <- id_prev_outer
+        #' than we had found at previous value of sp (for same k)
+        id_prev <- ids_k_sp[id_k, id_sp - 1]
+        if(is.null(fits_poss[[id_prev]])) {
+            sp_prev <- sp_poss[id_sp - 1]
+            fits_poss[[id_prev]] <- fit_given_fit_other_sp(data, sp_prev, fits_poss[[id]], basis)
         }
+        
+        
+        #if(fits_poss[[id]]$log_ml <= fits_poss[[id_prev]]$log_ml) {
+        #    continue_sp <- FALSE
+        #    id <- id_prev
+        #}
 
         if(id_sp == length(sp_poss)) {
             continue_sp <- FALSE
         }
 
     }
-    fits_poss[[id]]                
+    log_ml_poss <- sapply(fits_poss, "[[", "log_ml")
+    log_ml_poss[sapply(log_ml_poss, is.null)] <- -Inf
+    fits_poss[[which.max(log_ml_poss)]]
 }
 

@@ -196,12 +196,23 @@ test_that("fits the sleepstudy data", {
     #' TODO: automatically normalise data for numerical stability.
     nbasis <- 15
     mod <- fit_flexl(data_norm, nbasis = nbasis)
-    #' picks straight line fit
     
     mod_2 <- fit_flexl(data_norm, nbasis = nbasis, lsp_poss = 5:15)
-    #' BUT for larger sp, would actually choose larger k
-    #' (and this gives larger log_ml overall)
-
+    #' Two lsp_poss now choose same sp, k
+    #' BUT different fits
+    mod$l_pen
+    split_alpha(mod$alpha, nbasis, mod$k) #' all of the fourth component v small
+    mod$log_ml
+    correct_lprior_alpha(mod, basis)
+    log_det(mod$hessian)
+    
+    mod_2$l_pen
+    split_alpha(mod_2$alpha, nbasis, mod_2$k) #' other components are also quite different
+    #' (but fit looks the same in the two cases overall)
+    
+    mod_2$log_ml
+    correct_lprior_alpha(mod_2, basis)
+    log_det(mod_2$hessian)
 
     x_pred_data <- crossing(x = seq(from = min(data_norm$x),
                                     to = max(data_norm$x),
@@ -210,12 +221,97 @@ test_that("fits the sleepstudy data", {
 
     pred_data <- x_pred_data  %>%
         group_by(c) %>%
-        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])))
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])),
+               mu_hat_2 = predict_flexl(mod_2, newdata = list(x = x, c = c[1])))
+    )
     
     pred_data %>%
-        ggplot(aes(x = x)) +
-        geom_line(aes(y = mu_hat)) +
-        geom_point(aes(x = x, y = y), data = data_norm) +
-        facet_wrap(vars(c))
+    ggplot(aes(x = x)) +
+    geom_line(aes(y = mu_hat)) +
+    geom_line(aes(y = mu_hat_2), lty = 2) +
+    geom_point(aes(x = x, y = y), data = data_norm) +
+    facet_wrap(vars(c))
+    
+    sp <- exp(-5)
 
+    
+    basis <- find_orthogonal_spline_basis(nbasis, data_norm$x)
+
+
+    find_log_ml_k_given_sp <- function(sp, kmax) {
+        log_ml_poss <- c()
+        mod <- fit_0(data_norm, sp, basis)
+        log_ml_poss[1] <- mod$log_ml
+        for(k in 1:kmax) {
+            mod_prev <- mod
+            mod <- fit_given_fit_km1(data_norm, sp, k, mod_prev, basis)
+            log_ml_poss[k+1] <- mod$log_ml
+        }
+        log_ml_poss
+    }
+
+    kmax <- 6
+    log_ml_sp_1 <- find_log_ml_k_given_sp(exp(-5), kmax)
+    log_ml_sp_2 <- find_log_ml_k_given_sp(exp(-4), kmax)
+    log_ml_sp_3 <- find_log_ml_k_given_sp(exp(-3), kmax)
+    log_ml_sp_4 <- find_log_ml_k_given_sp(exp(-2), kmax)
+    log_ml_sp_5 <- find_log_ml_k_given_sp(exp(-1), kmax)
+    log_ml_sp_6 <- find_log_ml_k_given_sp(exp(0), kmax)
+    log_ml_sp_7 <- find_log_ml_k_given_sp(exp(1), kmax)
+
+    plot(0:kmax, log_ml_sp_2, type = "b")
+    plot(0:kmax, log_ml_sp_4, type = "b")
+    plot(0:kmax, log_ml_sp_5, type = "b")
+    plot(0:kmax, log_ml_sp_6, type = "b")
+    plot(0:kmax, log_ml_sp_7, type = "b")
+
+
+    #' what happens if we compare by using FVE instead?
+
+    kmax <- 10
+    
+    sp <- exp(-5)
+    mods_m5 <- list(fit_0(data_norm, sp, basis))
+    for(k in 1:kmax) {
+        mods_m5[[k+1]] <- fit_given_fit_km1(data_norm, sp, k, mods_m5[[k]], basis)
+    }
+
+    sapply(mods_m5, "[[", "sigma")
+    #' sigma still substantially reducing, all the way to k = 9. Better to use FVE instead.
+
+    sp <- 1
+    mods_0 <- list(fit_0(data_norm, sp, basis))
+    for(k in 1:kmax) {
+        mods_0[[k+1]] <- fit_given_fit_km1(data_norm, sp, k, mods_0[[k]], basis)
+    }
+
+    sapply(mods_0, "[[", "sigma")
+    #' gives k = 7
+
+    sp <- exp(6)
+    mods_6 <- list(fit_0(data_norm, sp, basis))
+    for(k in 1:kmax) {
+        mods_6[[k+1]] <- fit_given_fit_km1(data_norm, sp, k, mods_6[[k]], basis)
+    }
+
+    sigmas <- sapply(mods_6, "[[", "sigma")
+    log_mls <- sapply(mods_6, "[[", "log_ml")
+    r <- sigmas[-1]/sigmas[-length(sigmas)]
+    which(r > 1- 1e-3)
+    #' can drop k = 4 and above
+
+    #' same conclusions looking at lambdas
+    colMeans((mod$f(data_norm$x)^2))
+    #' contrib from k = 4 is very small
+    
+
+    #' This gives us a way to choose k, for fixed sigma
+    #' But how should we compare sigma?
+
+    mod_m5 <- mods_m5[[10]]
+    mod_0 <- mods_0[[8]]
+    mod_6 <- mods_6[[5]]
+
+    
 })
+
