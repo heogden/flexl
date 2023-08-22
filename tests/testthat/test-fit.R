@@ -216,3 +216,19 @@ test_that("fits the sleepstudy data", {
     
 })
 
+
+test_that("fits the fat data", {
+    library(ALA)
+    library(tidyverse)
+    
+    data <- fat %>%
+        as_tibble %>%
+        mutate(c = as.integer(as.factor(id)),
+               x = time.menarche,
+               y = percent.fat,
+               .keep = "none")
+
+    mod <- fit_flexl(data)
+
+
+})
