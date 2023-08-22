@@ -231,4 +231,16 @@ test_that("fits the fat data", {
     mod <- fit_flexl(data)
 
 
+    set.seed(1)
+
+    data_noise <- data %>%
+        mutate(y = y + rnorm(length(y), 0, 20))
+
+    mod_noise <- fit_flexl(data_noise, trace = TRUE)
+
+    data_norm <- data_noise
+    data_norm$y <- (data_noise$y - mean(data_noise$y)) / sd(data_noise$y)
+    data_norm$x <- (data_noise$x - mean(data_noise$x)) / sd(data_noise$x)
+
+    mod_norm <- fit_flexl(data_norm, trace = TRUE)
 })
