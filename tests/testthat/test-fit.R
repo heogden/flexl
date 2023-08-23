@@ -189,19 +189,14 @@ test_that("fits the sleepstudy data", {
                y = Reaction,
                x = Days)
 
-    data_norm <- data
-    data_norm$y <- (data$y - mean(data$y)) / sd(data$y)
-    data_norm$x <- (data$x - mean(data$x)) / sd(data$x)
-
-    #' TODO: automatically normalise data for numerical stability.
     nbasis <- 15
-    mod <- fit_flexl(data_norm, nbasis = nbasis)
+    mod <- fit_flexl(data, nbasis = nbasis)
 
 
-    x_pred_data <- crossing(x = seq(from = min(data_norm$x),
-                                    to = max(data_norm$x),
+    x_pred_data <- crossing(x = seq(from = min(data$x),
+                                    to = max(data$x),
                                     length.out = 100),
-                            c = unique(data_norm$c))
+                            c = unique(data$c))
 
     pred_data <- x_pred_data  %>%
         group_by(c) %>%
@@ -210,7 +205,7 @@ test_that("fits the sleepstudy data", {
     pred_data %>%
     ggplot(aes(x = x)) +
     geom_line(aes(y = mu_hat)) +
-    geom_point(aes(x = x, y = y), data = data_norm) +
+    geom_point(aes(x = x, y = y), data = data) +
     facet_wrap(vars(c))
     
     
@@ -238,9 +233,6 @@ test_that("fits the fat data", {
 
     mod_noise <- fit_flexl(data_noise, trace = TRUE)
 
-    data_norm <- data_noise
-    data_norm$y <- (data_noise$y - mean(data_noise$y)) / sd(data_noise$y)
-    data_norm$x <- (data_noise$x - mean(data_noise$x)) / sd(data_noise$x)
-
-    mod_norm <- fit_flexl(data_norm, trace = TRUE)
+    expect_lte(mod_noise$k, mod$k)
+    expect_gte(mod_noise$sp, mod$sp)
 })

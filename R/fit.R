@@ -3,6 +3,17 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
     if(any(is.na(data)))
         stop("There are missing values in the data, which flexl cannot handle")
 
+    m_y <- mean(data$y)
+    s_y <- sd(data$y)
+
+    m_x <- mean(data$x)
+    s_x <- sd(data$x)
+
+    norm <- list(m_y = m_y, s_y = s_y, m_x = m_x, s_x = s_x)
+
+    data$y <- (data$y - m_y) / s_y
+    data$x <- (data$x - m_x) / s_x
+    
     basis <- find_orthogonal_spline_basis(nbasis, data$x)
     
     sp_poss <- exp(lsp_poss)
@@ -31,6 +42,8 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
         if(trace)
             cat("k = ", fit$k, "\n")
         fit <- add_hessian_and_log_ml(fit, basis, data)
+        fit$norm <- norm
+        
         if(trace)
             cat("log_ml = ", fit$log_ml, "\n")
         fit_sp_poss[[i]] <- fit
