@@ -53,7 +53,7 @@ test_that("sensible fit for test data 1 (straight lines)", {
         ggplot(aes(x = x)) +
         geom_line(aes(y = mu_hat$estimate)) +
         geom_line(aes(y = mu), colour = "red", linetype = "dashed") + 
-        geom_ribbon(aes(ymin = mu_hat$lower, ymax = mu_hat$upper), alpha = 0.5) + 
+        geom_ribbon(aes(ymin = mu_hat$lower, ymax = mu_hat$upper), alpha = 0.2) + 
         geom_point(aes(x = x, y = y), data = data %>% filter(c <= 12)) +
         facet_wrap(vars(c))
 
@@ -260,6 +260,33 @@ test_that("fits the fat data", {
     mod <- fit_flexl(data)
 
 
+    mod_3 <- fit_flexl(data, kmax = 3)
+    eigen(-mod_3$hessian)$values
+    #' all positive. Should perhaps restrict k to make sure
+    #' that Hessian is negative definite
+
+    mod <- mod_3
+  
+    n_samples <- 1000
+    samples <- find_samples(mod, n_samples)
+
+    x_pred_data <- crossing(x = seq(from = min(data$x),
+                                    to = max(data$x),
+                                    length.out = 100),
+                            c = unique(data$c))
+
+    pred_data <- x_pred_data  %>%
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = "confidence",
+                                      samples = samples))
+
+    pred_data %>%
+        filter(c <= 12) %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat$estimate)) +
+        geom_ribbon(aes(ymin = mu_hat$lower, ymax = mu_hat$upper), alpha = 0.2) + 
+        geom_point(aes(x = x, y = y), data = data %>% filter(c <= 12)) +
+        facet_wrap(vars(c))
+    
     set.seed(1)
 
     data_noise <- data %>%
