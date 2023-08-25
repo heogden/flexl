@@ -33,6 +33,17 @@ test_that("sensible fit for test data 1 (straight lines)", {
     fitted_y <- fitted_flexl(mod)
     expect_equal(y_hat_data, fitted_y)
 
+    
+    mu_2_fun <- function(x) {
+        predict_flexl(mod, newdata = data.frame(x = x, c = 2))
+    }
+
+    newdata <- data.frame(x = seq(min(data$x), max(data$x), length = 10),
+                          c = 2)
+    d_mu_hat_data_man <- numDeriv::grad(mu_2_fun, newdata$x)
+    d_mu_hat_data <- predict_flexl(mod, newdata = newdata, deriv = TRUE)
+    expect_equal(d_mu_hat_data, d_mu_hat_data_man)
+    
     #' look at uncertainty
     n_samples <- 1000
     samples <- find_samples(mod, n_samples)
@@ -44,9 +55,12 @@ test_that("sensible fit for test data 1 (straight lines)", {
 
     pred_data <- x_pred_data  %>%
         mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = "confidence",
-                                      samples = samples)) %>%
+                                      samples = samples),
+               d_mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), deriv = TRUE,
+                                        interval = "confidence", samples = samples)) %>%
         group_by(c) %>%
-        mutate(mu = data_full$eta_fun(x, c[1]))
+        mutate(mu = data_full$eta_fun(x, c[1]),
+               d_mu = numDeriv::grad(data_full$eta_fun, x = x, c = c[1]))
 
     pred_data %>%
         filter(c <= 12) %>%
@@ -59,12 +73,30 @@ test_that("sensible fit for test data 1 (straight lines)", {
 
 
     coverage <- as.numeric(pred_data %>%
-        mutate(covers = ((mu_hat$lower < mu) & (mu_hat$upper > mu))) %>%
+        mutate(covers = ((mu_hat$lower < mu) & (mu_hat$upper > mu)),) %>%
         ungroup() %>%
         summarise(coverage = mean(covers)))
 
     expect_gt(coverage, 0.9)
     expect_lt(coverage, 1)
+
+    
+    pred_data %>%
+        filter(c <= 12) %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = d_mu_hat$estimate)) +
+        geom_line(aes(y = d_mu), colour = "red", linetype = "dashed") + 
+        geom_ribbon(aes(ymin = d_mu_hat$lower, ymax = d_mu_hat$upper), alpha = 0.2) + 
+        facet_wrap(vars(c))
+
+    coverage_d <- as.numeric(pred_data %>%
+        mutate(d_covers = ((d_mu_hat$lower < d_mu) & (d_mu_hat$upper > d_mu)),) %>%
+        ungroup() %>%
+        summarise(d_coverage = mean(d_covers)))
+
+    expect_gt(coverage_d, 0.9)
+    expect_lt(coverage_d, 1)
+    
 })
 
 
