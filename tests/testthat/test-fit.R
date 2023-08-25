@@ -43,16 +43,15 @@ test_that("sensible fit for test data 1 (straight lines)", {
                             length.out = 100), c = 2)
     
     y_hat <- predict_y_given_mod(mod, newdata)
-    y_hat_samples <- sapply(samples, predict_y_given_sample,
-                            mod = mod, newdata = newdata)
 
-    y_hat_lower <- apply(y_hat_samples, 1, quantile, probs = 0.025)
-    y_hat_upper <- apply(y_hat_samples, 1, quantile, probs = 0.975)
+    y_hat_with_interval <- predict_flexl(mod, newdata, interval = "confidence",
+                                         samples = samples)
+    
 
     
-    plot(x = newdata$x, y = y_hat, type = "l", ylim = range(c(y_hat_lower, y_hat_upper)))
-    lines(x = newdata$x, y = y_hat_lower, lty = 2)
-    lines(x = newdata$x, y = y_hat_upper, lty = 2)
+    plot(x = newdata$x, y = y_hat_with_interval$estimate, type = "l", ylim = range(y_hat_with_interval))
+    lines(x = newdata$x, y = y_hat_with_interval$lower, lty = 2)
+    lines(x = newdata$x, y = y_hat_with_interval$upper, lty = 2)
     points(data_c$x, data_c$y)
     
 })

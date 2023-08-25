@@ -1,56 +1,4 @@
 predict_y_given_mod <- function(mod, newdata) {
-    newdata$x <- (newdata$x - mod$norm$m_x) / mod$norm$s_x
-    
-    f0_x <- mod$f0(newdata$x)
-
-    if(mod$k == 0)
-        return(f0_x)
-
-    f_x <- mod$f(newdata$x)
-
-    row <- which(rownames(mod$u_hat) == newdata$c)
-    
-    u <- mod$u_hat[row,]
-    y_norm <- f0_x + colSums(u * t(f_x))
-    mod$norm$m_y + mod$norm$s_y * y_norm
-}
-
-
-predict_y_given_sample <- function(sample, mod, newdata) {
-    mod_s <- sample
-    mod_s$k <- mod$k
-    mod_s$norm <- mod$norm
-    
-    predict_y_given_mod(mod_s, newdata)
-}
-
-
-
-
-predict_flexl_old <- function(mod, newdata, interval = "none",
-                              level = 0.95, samples = NULL,
-                              n_samples = 1000) {
-    if(length(newdata$c) > 1)
-        stop("can only predict for a single cluster at once")
-
-    if(is.null(mod$norm)) {
-        mod$norm <- list(m_y = 0, s_y = 1, m_x = 0, s_x = 1)
-    }
-    if(interval == "none") {
-        return(predict_y_given_mod(mod, newdata))
-    } else {
-        if(is.null(samples)) {
-            samples <- find_samples(mod, n_samples)
-        }
-        y_hat_samples <- sapply(samples, predict_y_given_sample,
-                                mod = mod, newdata = newdata)
-        
-    }
-    
-   
-}
-
-predict_flexl <- function(mod, newdata) {
     newdata_norm <- newdata
     newdata_norm$x <- (newdata$x - mod$norm$m_x) / mod$norm$s_x
 
@@ -63,6 +11,39 @@ predict_flexl <- function(mod, newdata) {
     y_norm <- merge(newdata_norm, newdata_norm_all, by = c("c", "x"), sort = FALSE)$y_hat
     
     mod$norm$m_y + mod$norm$s_y * y_norm
+}
+
+predict_y_given_sample <- function(sample, mod, newdata) {
+    mod_s <- mod
+    mod_s$par_cluster <- sample
+    
+    predict_y_given_mod(mod_s, newdata)
+}
+
+
+
+predict_flexl <- function(mod, newdata, interval = "none",
+                          level = 0.95, samples = NULL,
+                          n_samples = 1000) {
+    if(is.null(mod$norm)) {
+        mod$norm <- list(m_y = 0, s_y = 1, m_x = 0, s_x = 1)
+    }
+    y_hat <- predict_y_given_mod(mod, newdata)
+    if(interval == "none") {
+        return(y_hat)
+    } else {
+        if(is.null(samples)) {
+            samples <- find_samples(mod, n_samples)
+        }
+        y_hat_samples <- sapply(samples, predict_y_given_sample,
+                                mod = mod, newdata = newdata)
+        alpha <- (1 - level) / 2
+        y_hat_lower <- apply(y_hat_samples, 1, quantile, probs = alpha)
+        y_hat_upper <- apply(y_hat_samples, 1, quantile, probs = 1 - alpha)
+        return(data.frame(estimate = y_hat, lower = y_hat_lower, upper = y_hat_upper))
+    }
+    
+   
 }
 
 

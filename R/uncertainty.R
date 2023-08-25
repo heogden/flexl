@@ -22,15 +22,13 @@ find_sample <- function(id, mod) {
     par_split <- split_par(par, mod$basis$nbasis)
     
     f0_x <- mod$basis$X %*% par_split$beta0
-    f0 <- find_spline_fun(par_split$beta0, mod$basis)
 
     if(mod$k > 0) {
         beta <- find_beta(par_split$alpha, mod$basis$nbasis, mod$k)
         f_x <- mod$basis$X %*% beta
-        f <- find_spline_fun(beta, mod$basis)
     } else {
+        beta <- matrix(nrow = mod$basis$nbasis, ncol = 0)
         f_x <- matrix(nrow = nrow(mod$data), ncol = 0)
-        f <- NULL
     }
     
     comps <- lapply(unique(mod$data$c), find_u_sample_cluster,
@@ -38,7 +36,7 @@ find_sample <- function(id, mod) {
     u <- Reduce(rbind, comps)
     rownames(u) <- unique(data$c)
     
-    list(par = par, u_hat = u, f0 = f0, f = f)
+    find_par_cluster(par_split$beta0, beta, u)
 }
 
 
