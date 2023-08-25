@@ -33,9 +33,11 @@ test_that("sensible fit for test data 1 (straight lines)", {
     fitted_y <- fitted_flexl(mod)
     expect_equal(y_hat_data, fitted_y)
 
+
     #' look at uncertainty
     n_samples <- 1000
     samples <- find_samples(mod, n_samples)
+    
 
     x_pred_data <- crossing(x = seq(from = min(data$x),
                                     to = max(data$x),
@@ -43,25 +45,48 @@ test_that("sensible fit for test data 1 (straight lines)", {
                             c = unique(data$c))
 
     pred_data <- x_pred_data  %>%
-        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = "confidence",
-                                      samples = samples)) %>%
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c),
+                                                interval = "confidence",
+                                           samples = samples),
+               mu_hat_simp = predict_flexl_simp(mod, newdata = list(x = x, c = c),
+                                                interval = "confidence",
+                                                samples = samples)) %>%
         group_by(c) %>%
         mutate(mu = data_full$eta_fun(x, c[1]))
 
+    expect_equal(pred_data$mu_hat$lower, pred_data$mu_hat_simp$lower)
+    #' not exactly the same, but *very* similar.
+
+    
     pred_data %>%
-        filter(c <= 12) %>%
+        filter(c <= 4) %>%
         ggplot(aes(x = x)) +
         geom_line(aes(y = mu_hat$estimate)) +
         geom_line(aes(y = mu), colour = "red", linetype = "dashed") + 
-        geom_ribbon(aes(ymin = mu_hat$lower, ymax = mu_hat$upper), alpha = 0.2) + 
-        geom_point(aes(x = x, y = y), data = data %>% filter(c <= 12)) +
+        geom_ribbon(aes(ymin = mu_hat$lower, ymax = mu_hat$upper), alpha = 0.2, colour = "blue") +
+        geom_ribbon(aes(ymin = mu_hat_simp$lower, ymax = mu_hat_simp$upper), alpha = 0.2, colour = "red") + 
+        geom_point(aes(x = x, y = y), data = data %>% filter(c <= 4)) +
         facet_wrap(vars(c))
+    #' The only differences are at the end points: maybe difference in what
+    #' happens in extrapolation step?
 
+    object <- mod$basis$basis
+    knots <- object@knots
+    order <- object@order
+    lower_norm <- knots[order]
+    upper_norm <- knots[length(knots)-order+1]
+    
+    range_norm <- c(lower_norm, upper_norm)
+    mod$norm$m_x + mod$norm$s_x * range_norm
+    
 
     coverage <- as.numeric(pred_data %>%
-        mutate(covers = ((mu_hat$lower < mu) & (mu_hat$upper > mu))) %>%
+                           mutate(covers = ((mu_hat$lower < mu) & (mu_hat$upper > mu)),
+                                  covers_s = ((mu_hat_simp$lower < mu) & (mu_hat_simp$upper > mu))) %>%
         ungroup() %>%
-        summarise(coverage = mean(covers)))
+        summarise(coverage = mean(covers),
+                  coverage_s = mean(covers_s))
+       
 
     expect_gt(coverage, 0.9)
     expect_lt(coverage, 1)
