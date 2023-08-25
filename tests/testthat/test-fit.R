@@ -37,23 +37,34 @@ test_that("sensible fit for test data 1 (straight lines)", {
     n_samples <- 1000
     samples <- find_samples(mod, n_samples)
 
-    
-    newdata <- list(x = seq(from = min(data$x),
-                            to = max(data$x),
-                            length.out = 100), c = 2)
-    
-    y_hat <- predict_y_given_mod(mod, newdata)
+    x_pred_data <- crossing(x = seq(from = min(data$x),
+                                    to = max(data$x),
+                                    length.out = 100),
+                            c = unique(data$c))
 
-    y_hat_with_interval <- predict_flexl(mod, newdata, interval = "confidence",
-                                         samples = samples)
-    
+    pred_data <- x_pred_data  %>%
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = "confidence",
+                                      samples = samples)) %>%
+        group_by(c) %>%
+        mutate(mu = data_full$eta_fun(x, c[1]))
 
-    
-    plot(x = newdata$x, y = y_hat_with_interval$estimate, type = "l", ylim = range(y_hat_with_interval))
-    lines(x = newdata$x, y = y_hat_with_interval$lower, lty = 2)
-    lines(x = newdata$x, y = y_hat_with_interval$upper, lty = 2)
-    points(data_c$x, data_c$y)
-    
+    pred_data %>%
+        filter(c <= 12) %>%
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat$estimate)) +
+        geom_line(aes(y = mu), colour = "red", linetype = "dashed") + 
+        geom_ribbon(aes(ymin = mu_hat$lower, ymax = mu_hat$upper), alpha = 0.5) + 
+        geom_point(aes(x = x, y = y), data = data %>% filter(c <= 12)) +
+        facet_wrap(vars(c))
+
+
+    coverage <- as.numeric(pred_data %>%
+        mutate(covers = ((mu_hat$lower < mu) & (mu_hat$upper > mu))) %>%
+        ungroup() %>%
+        summarise(coverage = mean(covers)))
+
+    expect_gt(coverage, 0.9)
+    expect_lt(coverage, 1)
 })
 
 
