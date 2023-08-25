@@ -2,6 +2,7 @@ add_hessian_and_log_ml <- function(fit, basis, data) {
     fit$hessian <- loglikelihood_pen_hess(fit$par,
                                           X = basis$X, y = data$y, c = data$c - 1,
                                           sp = fit$sp, S = basis$S, K = fit$k)
+    fit$var_par <- solve(-fit$hessian)
     fit$log_ml <- approx_log_ml(fit, fit$hessian, basis)
     fit
 }
@@ -50,11 +51,9 @@ find_fit_info <- function(opt, k, basis, sp, data) {
          f0 = f0,
          f = f,
          u_hat = u_hat,
-         lambda = lambda)
-    
-    
-    
-    
+         lambda = lambda,
+         data = data,
+         basis = basis)    
 }
 
 fit_given_par0 <- function(data, sp, k, par0, basis) {

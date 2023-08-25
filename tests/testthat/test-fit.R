@@ -28,6 +28,29 @@ test_that("sensible fit for test data 1 (straight lines)", {
     sd(mod$u[,1])
     sd(mod$u[,2])
     cor(mod$u[,1], mod$u[,2])
+
+    #' look at uncertainty
+    n_samples <- 1000
+    samples <- find_samples(mod, n_samples)
+
+    
+    newdata <- list(x = seq(from = min(data$x),
+                            to = max(data$x),
+                            length.out = 100), c = 2)
+    
+    y_hat <- predict_y_given_mod(mod, newdata)
+    y_hat_samples <- sapply(samples, predict_y_given_sample,
+                            mod = mod, newdata = newdata)
+
+    y_hat_lower <- apply(y_hat_samples, 1, quantile, probs = 0.025)
+    y_hat_upper <- apply(y_hat_samples, 1, quantile, probs = 0.975)
+
+    
+    plot(x = newdata$x, y = y_hat, type = "l", ylim = range(c(y_hat_lower, y_hat_upper)))
+    lines(x = newdata$x, y = y_hat_lower, lty = 2)
+    lines(x = newdata$x, y = y_hat_upper, lty = 2)
+    points(data_c$x, data_c$y)
+    
 })
 
 
