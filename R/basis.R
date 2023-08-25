@@ -10,20 +10,25 @@ find_orthogonal_spline_basis <- function(nbasis, x) {
 
 #' if x outside knots, extrapolate constant at nearest knot point, rather than NA
 #' (which is the default in orthogonalsplinebasis:::evaluate.SplineBasis
-evaluate_with_extrap <- function(object, x) {
+evaluate_with_extrap <- function(object, x, deriv) {
     knots <- object@knots
     order <- object@order
     lower <- knots[order]
     upper <- knots[length(knots)-order+1]
+
     x[x<lower] <- lower
     x[x>upper] <- upper
+   
+    if(deriv)
+        object <- orthogonalsplinebasis::deriv(object)
+    
     orthogonalsplinebasis::evaluate(object, x)
 }
 
 
 find_spline_fun <- function(beta, basis) {
-    spline_fun <- function(x) {
-        B <-  evaluate_with_extrap(basis$basis, x = x)
+    spline_fun <- function(x, deriv = FALSE) {
+        B <-  evaluate_with_extrap(basis$basis, x = x, deriv = deriv)
         result <- tcrossprod(B, t(beta))
         if(!is.matrix(beta))
             result <- as.numeric(result)
