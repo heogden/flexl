@@ -46,38 +46,6 @@ predict_flexl <- function(mod, newdata, interval = "none",
    
 }
 
-predict_flexl_simp <- function(mod, newdata, interval = "none",
-                          level = 0.95, samples = NULL,
-                          n_samples = 1000) {
-    if(is.null(mod$norm)) {
-        mod$norm <- list(m_y = 0, s_y = 1, m_x = 0, s_x = 1)
-    }
-    y_hat <- predict_y_given_mod(mod, newdata)
-    if(interval == "none") {
-        return(y_hat)
-    } else {
-        if(is.null(samples)) {
-            samples <- find_samples(mod, n_samples)
-        }
-        samples_a <- simplify2array(samples)
-        alpha <- (1 - level) / 2
-        par_cluster_lower <- apply(samples_a, c(1, 2), quantile, probs = alpha)
-        par_cluster_upper <- apply(samples_a, c(1, 2), quantile, probs = 1 - alpha)
-
-        mod_lower <- mod
-        mod_lower$par_cluster <- par_cluster_lower
-        y_hat_lower <- predict_y_given_mod(mod_lower, newdata)
-
-        mod_upper <- mod
-        mod_upper$par_cluster <- par_cluster_upper
-        y_hat_upper <- predict_y_given_mod(mod_upper, newdata)
-
-        return(data.frame(estimate = y_hat, lower = y_hat_lower, upper = y_hat_upper))
-    }
-    
-   
-}
-
 
 fitted_flexl <- function(mod) {
     if(is.null(mod$norm)) {
