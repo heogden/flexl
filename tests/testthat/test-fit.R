@@ -13,8 +13,7 @@ test_that("sensible fit for test data 1 (straight lines)", {
     library(tidyverse)
     
     pred_data <- bind_cols(x = data$x, c = data$c, eta = eta) %>%
-        group_by(c) %>%
-        mutate(eta_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])))
+        mutate(eta_hat = predict_flexl(mod, newdata = list(x = x, c = c)))
 
     rmse <- sqrt(mean(pred_data$eta_hat - pred_data$eta)^2)
     expect_lt(rmse, 0.1)
@@ -28,6 +27,11 @@ test_that("sensible fit for test data 1 (straight lines)", {
     sd(mod$u[,1])
     sd(mod$u[,2])
     cor(mod$u[,1], mod$u[,2])
+
+    #' check prediction
+    y_hat_data <- predict_flexl(mod, newdata = data)
+    fitted_y <- fitted_flexl(mod)
+    expect_equal(y_hat_data, fitted_y)
 
     #' look at uncertainty
     n_samples <- 1000
@@ -76,8 +80,7 @@ test_that("sensible fit for test data 2 (not straight lines)", {
     library(tidyverse)
     
     pred_data <- bind_cols(x = data$x, c = data$c, eta = eta) %>%
-        group_by(c) %>%
-        mutate(eta_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])))
+        mutate(eta_hat = predict_flexl(mod, newdata = list(x = x, c = c)))
 
     rmse <- sqrt(mean(pred_data$eta_hat - pred_data$eta)^2)
     expect_lt(rmse, 0.1)
@@ -185,8 +188,7 @@ test_that("gives reasonable fit with tricky blip function", {
     pred_data<- crossing(x = seq(0, 1, length.out = 100),
                          c = 1:n) %>%
         mutate(mu = u[c] * f1(x)) %>%
-        group_by(c) %>%
-        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])))
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c)))
 
     
     rmse <- sqrt(mean(pred_data$mu_hat - pred_data$mu)^2)
@@ -222,14 +224,13 @@ test_that("fits the sleepstudy data", {
                             c = unique(data$c))
 
     pred_data <- x_pred_data  %>%
-        group_by(c) %>%
-        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c[1])))
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c)))
     
     pred_data %>%
-    ggplot(aes(x = x)) +
-    geom_line(aes(y = mu_hat)) +
-    geom_point(aes(x = x, y = y), data = data) +
-    facet_wrap(vars(c))
+        ggplot(aes(x = x)) +
+        geom_line(aes(y = mu_hat)) +
+        geom_point(aes(x = x, y = y), data = data) +
+        facet_wrap(vars(c))
     
     
 })

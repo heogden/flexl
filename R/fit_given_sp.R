@@ -16,6 +16,11 @@ split_par <- function(par, nbasis) {
     split(par, components)
 }
 
+find_par_cluster <- function(beta0, beta, u_hat) {
+    beta0 + tcrossprod(beta, u_hat)
+}
+
+
 find_fit_info <- function(opt, k, basis, sp, data) {
     par <- opt$par
     l_pen <- opt$value
@@ -31,11 +36,13 @@ find_fit_info <- function(opt, k, basis, sp, data) {
         f_x <- basis$X %*% beta
         u_hat <- find_u_hat(exp(par_split$lsigma), data, f0_x, f_x)
         f <- find_spline_fun(beta, basis)
+        par_cluster <- find_par_cluster(par_split$beta0, beta, u_hat)
     } else {
         f <- NULL
         u_hat <- NULL
         beta <- NULL
         lambda <- NULL
+        par_cluster <- NULL
     }
 
     list(k = k,
@@ -48,8 +55,11 @@ find_fit_info <- function(opt, k, basis, sp, data) {
          lsigma = par_split$lsigma,
          beta = beta,
          sigma = exp(par_split$lsigma),
+         par_cluster = par_cluster,
          f0 = f0,
+         f0_x = f0_x,
          f = f,
+         f_x = f_x,
          u_hat = u_hat,
          lambda = lambda,
          data = data,
