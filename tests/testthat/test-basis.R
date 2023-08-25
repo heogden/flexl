@@ -27,7 +27,7 @@ test_that("find deriv of function written in spline basis", {
     beta <- matrix(rnorm(nbasis), ncol = 1)
     f <- find_spline_fun(beta, basis)
     
-    x_test <- c(0.2, 0.3)
+    x_test <- c(-0.5, 0.2, 0.3)
 
     grad_f_man <- numDeriv::grad(f, x_test)
     grad_f <- f(x_test, deriv = TRUE)
