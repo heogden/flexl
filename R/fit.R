@@ -42,6 +42,17 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
         if(trace)
             cat("k = ", fit$k, "\n")
         fit <- add_hessian_and_log_ml(fit, basis, data)
+
+        if(!is_neg_def(fit$hessian)) {
+            message("fit from optim gave non-negative definite Hessian. Trying with nlm")
+            opt <- fit_given_par0_nlm(data, sp, fit$k, fit$par, basis)
+            fit <- find_fit_info(opt, fit$k, basis, sp, data)
+            fit <- add_hessian_and_log_ml(fit, basis, data)
+            if(!is_neg_def(fit$hessian))
+                warning("Hessian is not negative definite")
+        }
+        
+        
         fit$norm <- norm
         
         if(trace)

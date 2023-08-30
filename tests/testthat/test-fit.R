@@ -290,14 +290,6 @@ test_that("fits the fat data", {
                .keep = "none")
 
     mod <- fit_flexl(data)
-
-
-    mod_3 <- fit_flexl(data, kmax = 3)
-    eigen(-mod_3$hessian)$values
-    #' all positive. Should perhaps restrict k to make sure
-    #' that Hessian is negative definite
-
-    mod <- mod_3
   
     n_samples <- 1000
     samples <- find_samples(mod, n_samples)

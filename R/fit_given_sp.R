@@ -39,6 +39,7 @@ find_fit_info <- function(opt, k, basis, sp, data) {
         par_cluster <- find_par_cluster(par_split$beta0, beta, u_hat)
     } else {
         f <- NULL
+        f_x <- matrix(nrow = length(data$x), ncol = 0)
         u_hat <- NULL
         beta <- NULL
         lambda <- NULL
@@ -77,6 +78,28 @@ fit_given_par0 <- function(data, sp, k, par0, basis) {
     
      fit
 }
+
+fit_given_par0_nlm <- function(data, sp, k, par0, basis) {
+    ml <- function(par) {
+        result <- -loglikelihood_pen(par, X = basis$X, y = data$y,
+                                     c = data$c - 1,
+                                     sp = sp, S = basis$S,
+                                     K = k)
+        gr <- -loglikelihood_pen_grad(par,
+                                      X = basis$X, y = data$y, c = data$c - 1,
+                                      sp = sp, S = basis$S, K = k)
+        attr(result, "gradient") <- gr
+        result
+    }
+    opt_nlm <- nlm(ml, par0, iterlim = 100000)
+
+    #' convert to format from optim
+    list(par = opt_nlm$estimate,
+         value = -opt_nlm$minimum,
+         convergence = ifelse(opt_nlm$code < 2, 0, opt_nlm$code))
+                
+}
+
 
 #' Fit the mean-only model
 fit_0 <- function(data, sp, basis) {
