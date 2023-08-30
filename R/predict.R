@@ -8,7 +8,10 @@ predict_y_given_mod <- function(mod, newdata, deriv = FALSE) {
     ynorm_all <- y_norm_fun(x_norm_all, deriv)
     newdata_norm_all$y_hat <- as.numeric(ynorm_all)
 
-    y_norm <- merge(newdata_norm, newdata_norm_all, by = c("c", "x"), sort = FALSE)$y_hat
+    newdata_norm$id <- 1:length(newdata_norm$x)
+
+    newdata_merged <- merge(newdata_norm, newdata_norm_all, by = c("c", "x"), sort = FALSE)
+    y_norm <- newdata_merged$y_hat[order(newdata_merged$id)]
 
     if(deriv) {
         a <- 0

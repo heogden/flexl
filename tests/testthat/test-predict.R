@@ -1,4 +1,4 @@
-test_that("prediction works with unordered data", {
+test_that("prediction works with unordered data with repeated x values", {
     library(tidyverse)
     
     sigma_u <- 0.5
@@ -27,9 +27,5 @@ test_that("prediction works with unordered data", {
     y_hat_pred <- predict_flexl(mod, newdata = data)
 
     expect_equal(y_hat, y_hat_pred)
-    #' something goes wrong with prediction
-
-    expect_equal(sort(y_hat), sort(y_hat_pred))
-    #' It is to do with the ordering of the output
-
 })
+
