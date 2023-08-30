@@ -96,6 +96,8 @@ test_that("sensible fit for test data 1 (straight lines)", {
 
     expect_gt(coverage_d, 0.9)
     expect_lt(coverage_d, 1)
+
+    
     
 })
 
