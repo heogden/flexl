@@ -35,14 +35,14 @@ predict_y_given_sample <- function(sample, mod, newdata, deriv = FALSE) {
 
 
 
-predict_flexl <- function(mod, newdata, deriv = FALSE, interval = "none",
+predict_flexl <- function(mod, newdata, deriv = FALSE, interval = FALSE,
                           level = 0.95, samples = NULL,
                           n_samples = 1000) {
     if(is.null(mod$norm)) {
         mod$norm <- list(m_y = 0, s_y = 1, m_x = 0, s_x = 1)
     }
     y_hat <- predict_y_given_mod(mod, newdata, deriv)
-    if(interval == "none") {
+    if(!interval) {
         return(y_hat)
     } else {
         if(is.null(samples)) {

@@ -54,10 +54,10 @@ test_that("sensible fit for test data 1 (straight lines)", {
                             c = unique(data$c))
 
     pred_data <- x_pred_data  %>%
-        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = "confidence",
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = TRUE,
                                       samples = samples),
                d_mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), deriv = TRUE,
-                                        interval = "confidence", samples = samples)) %>%
+                                        interval = TRUE, samples = samples)) %>%
         group_by(c) %>%
         mutate(mu = data_full$eta_fun(x, c[1]),
                d_mu = numDeriv::grad(data_full$eta_fun, x = x, c = c[1]))
@@ -302,7 +302,7 @@ test_that("fits the fat data", {
                             c = unique(data$c))
 
     pred_data <- x_pred_data  %>%
-        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = "confidence",
+        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = TRUE,
                                       samples = samples))
 
     pred_data %>%
