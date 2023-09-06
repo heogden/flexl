@@ -323,3 +323,29 @@ test_that("fits the fat data", {
     expect_lte(mod_noise$k, mod$k)
     expect_gte(mod_noise$sp, mod$sp)
 })
+
+test_that("fits the cd4 data", {
+    library(refund)
+    library(tidyverse)
+    
+     #' modified from refund::ccb.fpc
+    data(cd4)
+    #' obtain a subsample of the data with 25 subjects
+    set.seed(1236)
+    sample = sample(1:dim(cd4)[1], 25)
+    Y.sub = cd4[sample,]
+
+    times <- as.numeric(colnames(Y.sub))
+    data <- tibble(c = row(Y.sub)[!is.na(Y.sub)],
+                   y = Y.sub[!is.na(Y.sub)],
+                   x = times[col(Y.sub)[!is.na(Y.sub)]])
+    
+    y_hat <- fitted_flexl(mod)
+    y_hat_8 <- y_hat[data$c == 8]
+    y_8 <- data$y[data$c == 8]
+
+    #' gives very bad fit for cluster 8 at the moment
+    expect_false(all(y_hat_8 > y_8))
+
+  
+})
