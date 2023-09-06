@@ -3,7 +3,8 @@ predict_y_given_mod <- function(mod, newdata, deriv = FALSE) {
     newdata_norm$x <- (newdata$x - mod$norm$m_x) / mod$norm$s_x
 
     x_norm_all <- sort(unique(newdata_norm$x))
-    newdata_norm_all <- tidyr::crossing(c = unique(mod$data$c), x = x_norm_all)
+    clusters <- sort(unique(mod$data$c))
+    newdata_norm_all <- tidyr::expand_grid(c = clusters, x = x_norm_all)
     y_norm_fun <- find_spline_fun(mod$par_cluster, mod$basis)
     ynorm_all <- y_norm_fun(x_norm_all, deriv)
     newdata_norm_all$y_hat <- as.numeric(ynorm_all)

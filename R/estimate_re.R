@@ -13,9 +13,10 @@ find_u_hat_cluster <- function(cluster, sigma, data, f0_x, f_x) {
 
 
 find_u_hat <- function(sigma, data, f0_x, f_x) {
-    comps <- lapply(unique(data$c), find_u_hat_cluster,
+    clusters <- sort(unique(data$c))
+    comps <- lapply(clusters, find_u_hat_cluster,
                     sigma = sigma, data = data, f0_x = f0_x, f_x = f_x)
     u_hat <- Reduce(rbind, comps)
-    rownames(u_hat) <- unique(data$c)
+    rownames(u_hat) <- clusters
     u_hat
 }

@@ -324,7 +324,7 @@ test_that("fits the fat data", {
     expect_gte(mod_noise$sp, mod$sp)
 })
 
-test_that("fits the cd4 data", {
+test_that("fitted values and predictions don't depend on cluster ordering", {
     library(refund)
     library(tidyverse)
     
@@ -343,23 +343,30 @@ test_that("fits the cd4 data", {
     mod <- fit_flexl(data)
 
     y_hat <- fitted_flexl(mod)
+    y_hat_pred <- predict_flexl(mod, newdata = data)
+    expect_equal(y_hat, y_hat_pred)
+
+    #' (previously had problems predicting for cluster 8)
+    
+    y_hat_pred_8 <- y_hat_pred[data$c == 8]
     y_hat_8 <- y_hat[data$c == 8]
     y_8 <- data$y[data$c == 8]
 
-    #' gives very bad fit for cluster 8 at the moment
     expect_false(all(y_hat_8 > y_8))
+    expect_false(all(y_hat_pred_8 > y_8))
+
 
     data_ordered <- data %>%
         arrange(c)
 
     mod_ordered <- fit_flexl(data_ordered)
     y_hat_ordered <- fitted_flexl(mod_ordered)
-    
     y_hat_8_ordered <- y_hat_ordered[data_ordered$c == 8]
-    y_8_ordered <- data_ordered$y[data_ordered$c == 8] #' same as y_8
 
     expect_equal(y_hat_8, y_hat_8_ordered)
-    #' problem is to do with ordering of data
+    
+    y_hat_pred_ordered <- predict_flexl(mod_ordered, newdata = data_ordered)
+    y_hat_pred_ordered_8 <- y_hat_pred_ordered[data_ordered$c == 8]
 
-  
+    expect_equal(y_hat_pred_8, y_hat_pred_ordered_8)
 })
