@@ -339,13 +339,27 @@ test_that("fits the cd4 data", {
     data <- tibble(c = row(Y.sub)[!is.na(Y.sub)],
                    y = Y.sub[!is.na(Y.sub)],
                    x = times[col(Y.sub)[!is.na(Y.sub)]])
-    
+
+    mod <- fit_flexl(data)
+
     y_hat <- fitted_flexl(mod)
     y_hat_8 <- y_hat[data$c == 8]
     y_8 <- data$y[data$c == 8]
 
     #' gives very bad fit for cluster 8 at the moment
     expect_false(all(y_hat_8 > y_8))
+
+    data_ordered <- data %>%
+        arrange(c)
+
+    mod_ordered <- fit_flexl(data_ordered)
+    y_hat_ordered <- fitted_flexl(mod_ordered)
+    
+    y_hat_8_ordered <- y_hat_ordered[data_ordered$c == 8]
+    y_8_ordered <- data_ordered$y[data_ordered$c == 8] #' same as y_8
+
+    expect_equal(y_hat_8, y_hat_8_ordered)
+    #' problem is to do with ordering of data
 
   
 })
