@@ -346,6 +346,9 @@ test_that("fitted values and predictions don't depend on cluster ordering", {
     y_hat_pred <- predict_flexl(mod, newdata = data)
     expect_equal(y_hat, y_hat_pred)
 
+    pred_with_interval <- predict_flexl(mod, newdata = data, interval = TRUE)
+    expect_true(all(pred_with_interval$upper > pred_with_interval$estimate))
+    
     #' (previously had problems predicting for cluster 8)
     
     y_hat_pred_8 <- y_hat_pred[data$c == 8]
