@@ -30,11 +30,12 @@ find_sample <- function(id, mod) {
         beta <- matrix(nrow = mod$basis$nbasis, ncol = 0)
         f_x <- matrix(nrow = nrow(mod$data), ncol = 0)
     }
-    
-    comps <- lapply(unique(mod$data$c), find_u_sample_cluster,
+
+    clusters <- sort(unique(mod$data$c))
+    comps <- lapply(clusters, find_u_sample_cluster,
                     sigma = mod$sigma, data = mod$data, f0_x = f0_x, f_x = f_x)
     u <- Reduce(rbind, comps)
-    rownames(u) <- unique(mod$data$c)
+    rownames(u) <- clusters
     
     find_par_cluster(par_split$beta0, beta, u)
 }
