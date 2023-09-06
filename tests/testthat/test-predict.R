@@ -29,3 +29,28 @@ test_that("prediction works with unordered data with repeated x values", {
     expect_equal(y_hat, y_hat_pred)
 })
 
+test_that("prediction with confidence interval works in cd4 example", {
+    library(refund)
+    library(tidyverse)
+    
+     #' modified from refund::ccb.fpc
+    data(cd4)
+    #' obtain a subsample of the data with 25 subjects
+    set.seed(1236)
+    sample = sample(1:dim(cd4)[1], 25)
+    Y.sub = cd4[sample,]
+
+    times <- as.numeric(colnames(Y.sub))
+    data_cd4 <- tibble(c = row(Y.sub)[!is.na(Y.sub)],
+                       y = Y.sub[!is.na(Y.sub)],
+                       x = times[col(Y.sub)[!is.na(Y.sub)]])
+    
+    mod <- fit_flexl(data_cd4)
+    y_hat_pred <- predict_flexl(mod, newdata = data_cd4, interval = TRUE)
+
+    
+
+    
+    
+})
+

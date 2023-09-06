@@ -34,7 +34,7 @@ find_sample <- function(id, mod) {
     comps <- lapply(unique(mod$data$c), find_u_sample_cluster,
                     sigma = mod$sigma, data = mod$data, f0_x = f0_x, f_x = f_x)
     u <- Reduce(rbind, comps)
-    rownames(u) <- unique(data$c)
+    rownames(u) <- unique(mod$data$c)
     
     find_par_cluster(par_split$beta0, beta, u)
 }
