@@ -16,10 +16,11 @@ evaluate_with_extrap <- function(object, x, deriv) {
     lower <- knots[order]
     upper <- knots[length(knots)-order+1]
 
-    extrap <- (x < lower | x > upper)
+    extrap_lower <- (x < lower)
+    extrap_upper <- (x > upper)
     
-    x[extrap] <- lower
-    x[extrap] <- upper
+    x[extrap_lower] <- lower
+    x[extrap_upper] <- upper
    
     if(deriv)
         object <- orthogonalsplinebasis::deriv(object)
@@ -27,8 +28,8 @@ evaluate_with_extrap <- function(object, x, deriv) {
     result <- orthogonalsplinebasis::evaluate(object, x)
 
     if(deriv) {
-        result[extrap, ] <- 0
-        result[extrap, ] <- 0
+        result[extrap_lower, ] <- 0
+        result[extrap_upper, ] <- 0
     }
 
     result

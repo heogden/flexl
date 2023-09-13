@@ -33,5 +33,5 @@ test_that("find deriv of function written in spline basis", {
     grad_f <- f(x_test, deriv = TRUE)
 
     expect_equal(as.numeric(grad_f), grad_f_man)
-}
+})
 

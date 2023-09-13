@@ -29,6 +29,24 @@ test_that("prediction works with unordered data with repeated x values", {
     expect_equal(y_hat, y_hat_pred)
 })
 
+test_that("prediction reasonable outside of range of data", {
+    data_full <- generate_test_data_1()
+    data <- data_full$data
+    mu <- data_full$mu
+    delta <- data_full$delta
+    eta <- data_full$eta
+
+    mod <- fit_flexl(data)
+
+    x <- seq(min(data$x) - 0.1, max(data$x) + 0.1, length.out = 100)
+    y_hat <- predict_flexl(mod, newdata = data.frame(x = x, c = 1))
+
+    diffs <- y_hat[-1] - y_hat[-length(y_hat)]
+    expect_true(all(diffs >= 0))
+    
+})
+
+
 test_that("prediction with confidence interval works in cd4 example", {
     library(refund)
     library(tidyverse)
