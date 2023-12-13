@@ -2,7 +2,11 @@ add_hessian_and_log_ml <- function(fit, basis, data) {
     fit$hessian <- loglikelihood_pen_hess(fit$par,
                                           X = basis$X, y = data$y, c = data$c - 1,
                                           sp = fit$sp, S = basis$S, K = fit$k)
-    fit$var_par <- solve(-fit$hessian)
+    fit$var_par <- tryCatch(solve(-fit$hessian),
+                            error = function(cond) {
+                                pracma::pinv(-fit$hessian)
+                            })
+                            
     fit$log_ml <- approx_log_ml(fit, fit$hessian, basis)
     fit
 }
@@ -91,7 +95,7 @@ fit_given_par0_nlm <- function(data, sp, k, par0, basis) {
         attr(result, "gradient") <- gr
         result
     }
-    opt_nlm <- nlm(ml, par0, iterlim = 100000)
+    opt_nlm <- nlm(ml, par0, iterlim = 100000, check.analyticals = FALSE)
 
     #' convert to format from optim
     list(par = opt_nlm$estimate,

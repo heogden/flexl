@@ -12,7 +12,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.2
 Imports: 
     emulator,
+    matrixcalc,
     mvnfast,
+    pracma,
     Rcpp
 Suggests: 
     testthat (>= 3.0.0)
