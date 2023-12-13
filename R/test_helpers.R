@@ -110,3 +110,37 @@ generate_test_data_0 <- function() {
     list(data = data.frame(c = c, x = x, y = y),
          mu = mu)
 }
+
+
+
+simulate_rs <- function(seed, beta0, beta1, sigma_u, sigma_u_slope, corr_ri_rs, sigma, n_clusters, n_obs_per_cluster) {
+    set.seed(seed)
+    c <- rep(1:n_clusters, each = n_obs_per_cluster)
+    x <- runif(length(c))
+
+    Sigma_u_12 <- corr_ri_rs * sigma_u * sigma_u_slope
+    Sigma_u <- matrix(c(sigma_u^2, Sigma_u_12, Sigma_u_12, sigma_u_slope^2), nrow = 2, ncol = 2)
+    
+    u <- mvtnorm::rmvnorm(n_clusters, sigma = Sigma_u)
+
+    mu_c <- function(x, c) {
+        (beta0 + u[c, 1]) + (beta1 + u[c, 2]) * x
+    }
+
+    
+    pred_data <- crossing(x = seq(min(x), max(x), length.out = 100),
+                          c = 1:n_clusters) %>%
+        mutate(mu_c = mu_c(x, c))
+   
+    mu <- (beta0 + u[c, 1]) + (beta1 + u[c, 2]) * x
+    epsilon <- rnorm(length(mu), sd = sigma)
+    
+    y <- mu + epsilon
+
+    data <- tibble(c = c,
+                   x = x,
+                   y = y,
+                   mu = mu)
+    list(data = data, pred_data = pred_data)
+}
+

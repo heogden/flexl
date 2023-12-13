@@ -373,3 +373,14 @@ test_that("fitted values and predictions don't depend on cluster ordering", {
 
     expect_equal(y_hat_pred_8, y_hat_pred_ordered_8)
 })
+
+test_that("fits for first problem data generated from rs model", {
+    data_full <- simulate_rs(1, -1, 2, 1, 0.5, 0, 0.1, 20, 5)
+    data <- data_full$data
+    mod <- fit_flexl(data)
+
+    pred_data <- data_full$pred_data
+    pred_data$mu_c_hat <- predict_flexl(mod, newdata = pred_data)
+
+    expect_lt(mean(abs(pred_data$mu_c_hat - pred_data$mu_c)), 1)
+})
