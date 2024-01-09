@@ -48,10 +48,16 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
             opt <- fit_given_par0_nlm(data, sp, fit$k, fit$par, basis)
             fit <- find_fit_info(opt, fit$k, basis, sp, data)
             fit <- add_hessian_and_log_ml(fit, basis, data)
-            if(!is_neg_def(fit$hessian))
-                warning("Hessian is not negative definite")
-            if(matrixcalc::is.singular.matrix(fit$hessian))
-                warning("Hessian is singular")
+            
+            if(!is_neg_def(fit$hessian) | matrixcalc::is.singular.matrix(fit$hessian)) {
+                if(fit$k > 1) {
+                    message("fit from nlm gave non-negative definite or singular Hessian. Reducing k")
+                    fit <- fits[[fit$k]]
+                    fit <- add_hessian_and_log_ml(fit, basis, data)
+                }
+
+            }
+            
         }
 
  

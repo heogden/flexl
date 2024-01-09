@@ -389,7 +389,11 @@ test_that("fits for problem data from 1dv model", {
     data_full <- simulate_1dv(22, -0.5, 0.1, 0.5, 0.1, 20, 10)
     data <- data_full$data
     mod <- fit_flexl(data)
-
+    expect_equal(mod$k, 2)
+    
     pred_data <- data_full$pred_data
     pred_data$mu_c_hat <- predict_flexl(mod, newdata = pred_data, interval = TRUE)
+
+    expect_lt(mean(abs(pred_data$mu_c_hat$estimate - pred_data$mu_c)), 1)
+
 })
