@@ -144,3 +144,34 @@ simulate_rs <- function(seed, beta0, beta1, sigma_u, sigma_u_slope, corr_ri_rs, 
     list(data = data, pred_data = pred_data)
 }
 
+simulate_1dv <- function(seed, beta0, beta1, sigma_u, sigma, n_clusters, n_obs_per_cluster) {
+    set.seed(seed)
+    c <- rep(1:n_clusters, each = n_obs_per_cluster)
+    x <- runif(length(c))
+
+    u <- rnorm(n_clusters, sd = sigma_u)
+
+    s <- function(x) {
+        1/(0.5 + 0.1 * (10 * x - 5)^2)
+    }
+    
+    mu_c <- function(x, c) {
+        s(x) * (beta0 + beta1 * x + u[c])
+    }
+
+    
+    pred_data <- crossing(x = seq(min(x), max(x), length.out = 100),
+                            c = 1:n_clusters) %>%
+        mutate(mu_c = mu_c(x, c))
+   
+    mu <- s(x) * (beta0 + beta1 * x + u[c])
+    epsilon <- rnorm(length(mu), sd = sigma)
+    
+    y <- mu + epsilon
+
+    data <- tibble(c = c,
+                   x = x,
+                   y = y,
+                   mu = mu)
+    list(data = data, pred_data = pred_data)
+}
