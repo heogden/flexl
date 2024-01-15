@@ -112,6 +112,7 @@ generate_test_data_0 <- function() {
 }
 
 
+#' @export
 simulate_ri <- function(seed, beta0, beta1, sigma_u, sigma, n_clusters, n_obs_per_cluster) {
     set.seed(seed)
     c <- rep(1:n_clusters, each = n_obs_per_cluster)
@@ -140,6 +141,7 @@ simulate_ri <- function(seed, beta0, beta1, sigma_u, sigma, n_clusters, n_obs_pe
     list(data = data, pred_data = pred_data)
 }
 
+#' @export
 simulate_rs <- function(seed, beta0, beta1, sigma_u, sigma_u_slope, corr_ri_rs, sigma, n_clusters, n_obs_per_cluster) {
     set.seed(seed)
     c <- rep(1:n_clusters, each = n_obs_per_cluster)
@@ -171,6 +173,7 @@ simulate_rs <- function(seed, beta0, beta1, sigma_u, sigma_u_slope, corr_ri_rs, 
     list(data = data, pred_data = pred_data)
 }
 
+#' @export
 simulate_1dv <- function(seed, beta0, beta1, sigma_u, sigma, n_clusters, n_obs_per_cluster) {
     set.seed(seed)
     c <- rep(1:n_clusters, each = n_obs_per_cluster)

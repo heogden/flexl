@@ -41,6 +41,7 @@ find_sample <- function(id, mod) {
 }
 
 
+#' @export
 find_samples <- function(mod, n_samples) {
     lapply(1:n_samples, find_sample, mod = mod)
 }

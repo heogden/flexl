@@ -1,3 +1,4 @@
+#' @export
 fit_flexl <- function(data, nbasis = 10, kmax = 10,
                       lsp_poss = -5:15, trace = FALSE) {
     if(any(is.na(data)))

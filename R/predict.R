@@ -27,6 +27,7 @@ predict_y_given_mod <- function(mod, newdata, deriv = FALSE) {
     a + b * y_norm
 }
 
+#' @export
 predict_y_given_sample <- function(sample, mod, newdata, deriv = FALSE) {
     mod_s <- mod
     mod_s$par_cluster <- sample
@@ -35,7 +36,7 @@ predict_y_given_sample <- function(sample, mod, newdata, deriv = FALSE) {
 }
 
 
-
+#' @export
 predict_flexl <- function(mod, newdata, deriv = FALSE, interval = FALSE,
                           level = 0.95, samples = NULL,
                           n_samples = 1000) {
@@ -60,7 +61,7 @@ predict_flexl <- function(mod, newdata, deriv = FALSE, interval = FALSE,
    
 }
 
-
+#' @export
 fitted_flexl <- function(mod) {
     if(is.null(mod$norm)) {
         mod$norm <- list(m_y = 0, s_y = 1, m_x = 0, s_x = 1)
