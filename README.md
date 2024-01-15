@@ -3,41 +3,13 @@
 
 # flexl
 
-<!-- badges: start -->
-
-<!-- badges: end -->
-
-The goal of flexl is to …
+The goal of flexl is to implement flexible models for simple
+longitudinal data.
 
 ## Installation
 
-To improve speed of C++ code, we need to switch off debugging. In
-development, can do this by running
+flexl can be installed by using
 
 ``` r
-pkgbuild::compile_dll(debug = FALSE)
-devtools::load_all()
-```
-
-(installing the package with `install.packages` switches off debugging
-automatically).
-
-When compiling, I set the Makevars (`~/.R/Makevars`) to
-
-    CPPFLAGS = -w
-
-to switch off the warnings. This was necessary because the code was very
-slow to compile if all warnings were printed (because of things included
-from Boost and Eigen).
-
-I also set the `CXX17`, according to
-<https://github.com/stan-dev/rstan/wiki/Configuring-C-Toolchain-for-Linux>
-
-## Example
-
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-library(flexl)
-## basic example code
+devtools::install_github("heogden12/flexl")
 ```
