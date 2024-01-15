@@ -5,7 +5,7 @@
 \title{if x outside knots, extrapolate constant at nearest knot point, rather than NA
 (which is the default in orthogonalsplinebasis:::evaluate.SplineBasis}
 \usage{
-evaluate_with_extrap(object, x)
+evaluate_with_extrap(object, x, deriv)
 }
 \description{
 if x outside knots, extrapolate constant at nearest knot point, rather than NA
