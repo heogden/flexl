@@ -11,5 +11,5 @@ longitudinal data.
 flexl can be installed by using
 
 ``` r
-devtools::install_github("heogden12/flexl")
+devtools::install_github("heogden/flexl")
 ```

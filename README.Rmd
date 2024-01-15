@@ -24,6 +24,6 @@ for simple longitudinal data.
 flexl can be installed by using
 
 ```{r, eval = FALSE}
-devtools::install_github("heogden12/flexl")
+devtools::install_github("heogden/flexl")
 ```
 
