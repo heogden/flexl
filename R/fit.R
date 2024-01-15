@@ -1,3 +1,18 @@
+#' Fit a flexible model for simple longitudinal data.
+#'
+#' @param data. A data frame, with columns c (identifying
+#'   the individual subjects), x (the time) and y (the response).
+#' @param nbasis The number of spline basis functions.
+#' @param kmax The maximum number of functional principal components
+#'   to allow.
+#' @param lsp_poss The grid of possible values to consider for 
+#'   log(gamma), the log of the smoothing parameter.
+#' @param trace If TRUE, print out extra information.
+#' @return The fitted model.
+#' @examples
+#' data_full <- simulate_1dv(1, -0.5, 0.1, 0.5, 0.1, 20, 10)
+#' data <- data_full$data
+#' mod <- fit_flexl(data)
 #' @export
 fit_flexl <- function(data, nbasis = 10, kmax = 10,
                       lsp_poss = -5:15, trace = FALSE) {

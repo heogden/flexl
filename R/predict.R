@@ -35,7 +35,33 @@ predict_y_given_sample <- function(sample, mod, newdata, deriv = FALSE) {
     predict_y_given_mod(mod_s, newdata, deriv)
 }
 
-
+#' Prediction for flexible models for longitudinal data
+#'
+#' @param mod The fitted model, output from fit_flexl
+#' @param newdata A data frame, containing the new
+#'   values of x, y and c at which to make predictions.
+#' @param deriv If TRUE, output predictions for derivative
+#'   of subject-specific mean function
+#' @param interval Should a confidence interval also be given
+#'   for the predictions?
+#' @param level The coverage for the confidence interval,
+#'   if interval = TRUE.
+#' @param samples An optional list of parametric bootstrap samples
+#'   used to construct the confidence interval,
+#'   output by find_samples.
+#' @param n_samples If samples = NULL, the number of parametric
+#'   bootstrap samples used to construct the confidence interval,
+#'   if interval = TRUE.
+#' @return If interval = FALSE, a vector of the predictions.
+#'   If interval = TRUE, a data frame with columns estimate,
+#'   lower and upper, giving the point estimate and
+#'   confidence interval
+#' @examples
+#' data_full <- simulate_1dv(1, -0.5, 0.1, 0.5, 0.1, 20, 10)
+#' data <- data_full$data
+#' mod <- fit_flexl(data)
+#' pred_data <- data_full$pred_data
+#' pred_data$mu_c_hat <- predict_flexl(mod, newdata = pred_data, interval = TRUE)
 #' @export
 predict_flexl <- function(mod, newdata, deriv = FALSE, interval = FALSE,
                           level = 0.95, samples = NULL,
