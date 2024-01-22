@@ -125,19 +125,19 @@ simulate_ri <- function(seed, beta0, beta1, sigma_u, sigma, n_clusters, n_obs_pe
     }
 
     
-    pred_data <- tidyr::crossing(x = seq(min(x), max(x), length.out = 100),
-                                 c = 1:n_clusters) %>%
-        dplyr::mutate(mu_c = mu_c(x, c))
+    pred_data <- expand.grid(x = seq(min(x), max(x), length.out = 100),
+                             c = 1:n_clusters)
+    pred_data$mu_c <- mu_c(pred_data$x, pred_data$c)
    
     mu <- beta0 + beta1 * x + u[c]
     epsilon <- rnorm(length(mu), sd = sigma)
     
     y <- mu + epsilon
 
-    data <- tibble::tibble(c = c,
-                           x = x,
-                           y = y,
-                           mu = mu)
+    data <- data.frame(c = c,
+                       x = x,
+                       y = y,
+                       mu = mu)
     list(data = data, pred_data = pred_data)
 }
 
@@ -157,19 +157,20 @@ simulate_rs <- function(seed, beta0, beta1, sigma_u, sigma_u_slope, corr_ri_rs, 
     }
 
     
-    pred_data <- tidyr::crossing(x = seq(min(x), max(x), length.out = 100),
-                                 c = 1:n_clusters) %>%
-        dplyr::mutate(mu_c = mu_c(x, c))
+    pred_data <- expand.grid(x = seq(min(x), max(x), length.out = 100),
+                             c = 1:n_clusters)
+    pred_data$mu_c <- mu_c(pred_data$x, pred_data$c)
    
     mu <- (beta0 + u[c, 1]) + (beta1 + u[c, 2]) * x
     epsilon <- rnorm(length(mu), sd = sigma)
     
     y <- mu + epsilon
 
-    data <- tibble::tibble(c = c,
-                           x = x,
-                           y = y,
-                           mu = mu)
+    data <- data.frame(c = c,
+                       x = x,
+                       y = y,
+                       mu = mu)
+    
     list(data = data, pred_data = pred_data)
 }
 
@@ -190,18 +191,18 @@ simulate_1dv <- function(seed, beta0, beta1, sigma_u, sigma, n_clusters, n_obs_p
     }
 
     
-    pred_data <- tidyr::crossing(x = seq(min(x), max(x), length.out = 100),
-                                 c = 1:n_clusters) %>%
-        dplyr::mutate(mu_c = mu_c(x, c))
+    pred_data <- expand.grid(x = seq(min(x), max(x), length.out = 100),
+                             c = 1:n_clusters)
+    pred_data$mu_c <- mu_c(pred_data$x, pred_data$c)
    
     mu <- s(x) * (beta0 + beta1 * x + u[c])
     epsilon <- rnorm(length(mu), sd = sigma)
     
     y <- mu + epsilon
 
-    data <- tibble::tibble(c = c,
-                           x = x,
-                           y = y,
-                           mu = mu)
+    data <- data.frame(c = c,
+                       x = x,
+                       y = y,
+                       mu = mu)
     list(data = data, pred_data = pred_data)
 }

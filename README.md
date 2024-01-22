@@ -43,8 +43,6 @@ with 20 subjects and 10 observations per subject:
 ``` r
 library(flexl)
 
-library(tidyverse)
-
 data_full <- simulate_1dv(1, -0.5, 0.1, 0.5, 0.1, 20, 10)
 data <- data_full$data
 ```
@@ -56,7 +54,7 @@ identifier for the subject), `x` (the time the observation was made) and
 We can plot the data:
 
 ``` r
-library(ggplot2)
+library(tidyverse)
 
 ggplot(data, aes(x = x, y = y)) +
     geom_point() +
@@ -79,8 +77,8 @@ compare the fitted mean curves against the true mean curves.
 ``` r
 pred_data <- data_full$pred_data %>%
     mutate(mu_c_hat = predict_flexl(mod,
-                                  newdata = list(x = x, c = c),
-                                  interval = TRUE))
+                                    newdata = list(x = x, c = c),
+                                    interval = TRUE))
 
 ggplot(pred_data, aes(x = x)) +
     geom_line(aes(y = mu_c_hat$estimate)) +
