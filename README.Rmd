@@ -30,6 +30,9 @@ Our interest is in estimating the subject-specific
 mean functions $\mu_i(.)$. 
 In doing this, we allow flexible dependence on time, and make
  similarities between these curves to improve estimation.
+ 
+Details of the methods used by flexl
+are given in [this preprint](https://arxiv.org/abs/2401.11827).
 
 ## Installation
 
@@ -43,7 +46,9 @@ devtools::install_github("heogden/flexl")
 
 For demonstration purposes, we use some
 simulated longitudinal data, with 20 subjects
-and 10 observations per subject:
+and 10 observations per subject
+(see [Section 5.4 of the preprint](https://arxiv.org/pdf/2401.11827.pdf#subsection.5.4)
+for details of how the data are generated).
 
 ```{r, message = FALSE}
 library(flexl)
