@@ -14,6 +14,7 @@ Imports:
     emulator,
     matrixcalc,
     mvnfast,
+    orthogonalsplinebasis,
     pracma,
     Rcpp
 Suggests: 
