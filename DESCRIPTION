@@ -22,7 +22,7 @@ Config/testthat/edition: 3
 LinkingTo:
     Rcpp,
     RcppEigen,
-    StanHeaders (>= 2.21.0),
+    StanHeaders (>= 2.26.0),
     RcppParallel (>= 5.0.1),
     BH (>= 1.66.0)
 SystemRequirements: GNU make
