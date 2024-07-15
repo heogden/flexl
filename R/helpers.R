@@ -17,5 +17,8 @@ log_det_gen <- function(x, rank) {
 }
 
 is_neg_def <- function(A) {
-    all(eigen(A, only.values = TRUE)$values < 0)
+    v <- eigen(A, only.values = TRUE)$values
+    if(!is.numeric(v))
+        return(FALSE)
+    all(v < 0)
 }
