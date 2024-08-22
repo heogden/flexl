@@ -9,14 +9,15 @@ Description: What the package does (one paragraph).
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.1
 Imports: 
     emulator,
     matrixcalc,
     mvnfast,
     orthogonalsplinebasis,
     pracma,
-    Rcpp
+    Rcpp,
+    RcppEigen
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
