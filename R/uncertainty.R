@@ -40,7 +40,11 @@ find_sample <- function(id, mod) {
     find_par_cluster(par_split$beta0, beta, u)
 }
 
-
+#' Find parametric bootstrap samples from a fitted model
+#'
+#' @param mod The fitted model, output from fit_flexl.
+#' @param n_samples The number of samples to generate.
+#'
 #' @export
 find_samples <- function(mod, n_samples) {
     lapply(1:n_samples, find_sample, mod = mod)

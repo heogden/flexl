@@ -72,10 +72,10 @@ find_fit_info <- function(opt, k, basis, sp, data) {
 }
 
 fit_given_par0 <- function(data, sp, k, par0, basis) {
-     opt <- optim(par0, loglikelihood_pen, loglikelihood_pen_grad,
-                 X = basis$X, y = data$y, c = data$c - 1,
-                 sp = sp, S = basis$S, K = k,
-                 method = "BFGS", control = list(fnscale = -1, maxit = 10000))
+     opt <- stats::optim(par0, loglikelihood_pen, loglikelihood_pen_grad,
+                         X = basis$X, y = data$y, c = data$c - 1,
+                         sp = sp, S = basis$S, K = k,
+                         method = "BFGS", control = list(fnscale = -1, maxit = 10000))
     if(opt$convergence != 0)
         warning("optim has not converged")
      fit <- find_fit_info(opt, k, basis, sp, data)
@@ -95,9 +95,9 @@ fit_given_par0_nlm <- function(data, sp, k, par0, basis) {
         attr(result, "gradient") <- gr
         result
     }
-    opt_nlm <- nlm(ml, par0, iterlim = 100000, check.analyticals = FALSE)
+    opt_nlm <- stats::nlm(ml, par0, iterlim = 100000, check.analyticals = FALSE)
 
-    #' convert to format from optim
+    # convert to format from optim
     list(par = opt_nlm$estimate,
          value = -opt_nlm$minimum,
          convergence = ifelse(opt_nlm$code < 2, 0, opt_nlm$code))
@@ -105,7 +105,7 @@ fit_given_par0_nlm <- function(data, sp, k, par0, basis) {
 }
 
 
-#' Fit the mean-only model
+# Fit the mean-only model
 fit_0 <- function(data, sp, basis) {
     X_0 <- basis$X
     
@@ -116,7 +116,7 @@ fit_0 <- function(data, sp, basis) {
     beta_0 <- as.numeric(solve(XtX + sp * basis$S, Xt_y))
     y_hat_0 <- X_0 %*% beta_0
     resid <- data$y - y_hat_0
-    sigma <- sd(resid)
+    sigma <- stats::sd(resid)
 
     par0 <- c(beta_0, log(sigma))
     
@@ -141,7 +141,7 @@ find_par0_given_fit_km1 <- function(fit_km1, k, nbasis, fit_k_other_sp = NULL) {
 }
 
 
-#' fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
+# fit model with k eigenfunctions, given model fit with k - 1 eigenfunctions, same sp
 fit_given_fit_km1 <- function(data, sp, k, fit_km1, basis, fit_k_other_sp = NULL) {
     par0 <- find_par0_given_fit_km1(fit_km1, k, basis$nbasis, fit_k_other_sp)        
     fit_given_par0(data, sp, k, par0, basis)

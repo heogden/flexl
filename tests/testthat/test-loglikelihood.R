@@ -18,19 +18,18 @@ test_that("derivatives of loglikelihood are correct", {
         loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
     }
 
-    library(numDeriv)
-    lp_grad_man <- grad(lp_fun, par)
-    lp_hess_man <- hessian(lp_fun, par)
+    lp_grad_man <- numDeriv::grad(lp_fun, par)
+    lp_hess_man <- numDeriv::hessian(lp_fun, par)
 
     expect_equal(lp_grad, lp_grad_man)
     expect_equal(lp_hess, lp_hess_man)
 
-    library(microbenchmark)
-    microbenchmark(
-        loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, k),
-        loglikelihood_pen_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k),
-        loglikelihood_pen_hess(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
-    )
+    #library(microbenchmark)
+    #microbenchmark(
+    #    loglikelihood_pen(par, basis$X, data$y, data$c - 1, sp, basis$S, k),
+    #    loglikelihood_pen_grad(par, basis$X, data$y, data$c - 1, sp, basis$S, k),
+    #    loglikelihood_pen_hess(par, basis$X, data$y, data$c - 1, sp, basis$S, k)
+    #)
     #' timings similar to passing in beta: doing transform does not add too much cost
     #' can do ~ 900 iterations per second with the gradient
 

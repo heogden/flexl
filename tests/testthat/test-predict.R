@@ -48,15 +48,13 @@ test_that("prediction reasonable outside of range of data", {
 
 
 test_that("prediction with confidence interval works in cd4 example", {
-    library(refund)
     library(tidyverse)
     
      #' modified from refund::ccb.fpc
-    data(cd4)
     #' obtain a subsample of the data with 25 subjects
     set.seed(1236)
-    sample = sample(1:dim(cd4)[1], 25)
-    Y.sub = cd4[sample,]
+    sample = sample(1:dim(refund::cd4)[1], 25)
+    Y.sub = refund::cd4[sample,]
 
     times <- as.numeric(colnames(Y.sub))
     data_cd4 <- tibble(c = row(Y.sub)[!is.na(Y.sub)],

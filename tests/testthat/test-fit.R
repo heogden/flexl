@@ -172,10 +172,9 @@ test_that("chooses a reasonably large sp if have straight lines", {
 
 
 test_that("error if data has missing values", {
-    library(ALA)
     library(tidyverse)
     
-    data <-  exercise %>%
+    data <-  ALA::exercise %>%
         as_tibble %>%
         mutate(c = as.integer(as.factor(id)),
                x = day,
@@ -249,10 +248,9 @@ test_that("gives reasonable fit with tricky blip function", {
 })
 
 test_that("fits the sleepstudy data", {
-    library(lme4)
     library(tidyverse)
     
-    data <- sleepstudy %>%
+    data <- lme4::sleepstudy %>%
         as_tibble %>%
         mutate(c = as.integer(as.factor(Subject)),
                y = Reaction,
@@ -281,10 +279,9 @@ test_that("fits the sleepstudy data", {
 
 
 test_that("fits the fat data", {
-    library(ALA)
     library(tidyverse)
     
-    data <- fat %>%
+    data <- ALA::fat %>%
         as_tibble %>%
         mutate(c = as.integer(as.factor(id)),
                x = time.menarche,
@@ -325,15 +322,13 @@ test_that("fits the fat data", {
 })
 
 test_that("fitted values and predictions don't depend on cluster ordering", {
-    library(refund)
     library(tidyverse)
     
      #' modified from refund::ccb.fpc
-    data(cd4)
     #' obtain a subsample of the data with 25 subjects
     set.seed(1236)
-    sample = sample(1:dim(cd4)[1], 25)
-    Y.sub = cd4[sample,]
+    sample = sample(1:dim(refund::cd4)[1], 25)
+    Y.sub = refund::cd4[sample,]
 
     times <- as.numeric(colnames(Y.sub))
     data <- tibble(c = row(Y.sub)[!is.na(Y.sub)],

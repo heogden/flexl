@@ -28,7 +28,7 @@ find_T_list <- function(alpha, nbasis, k) {
     alpha_list <- split_alpha(alpha, nbasis, k)
 
     T_list <- list()
-    #' no transformation for k = 1: identity matrix
+    # no transformation for k = 1: identity matrix
     T_list[[1]] <- diag(nrow = length(alpha_list[[1]]))
     
     if(k > 1) {

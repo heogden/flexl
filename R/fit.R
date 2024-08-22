@@ -1,6 +1,6 @@
 #' Fit a flexible model for simple longitudinal data.
 #'
-#' @param data. A data frame, with columns c (identifying
+#' @param data A data frame, with columns c (identifying
 #'   the individual subjects), x (the time) and y (the response).
 #' @param nbasis The number of spline basis functions.
 #' @param kmax The maximum number of functional principal components
@@ -20,10 +20,10 @@ fit_flexl <- function(data, nbasis = 10, kmax = 10,
         stop("There are missing values in the data, which flexl cannot handle")
 
     m_y <- mean(data$y)
-    s_y <- sd(data$y)
+    s_y <- stats::sd(data$y)
 
     m_x <- mean(data$x)
-    s_x <- sd(data$x)
+    s_x <- stats::sd(data$x)
 
     norm <- list(m_y = m_y, s_y = s_y, m_x = m_x, s_x = s_x)
 

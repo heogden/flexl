@@ -7,6 +7,9 @@
 fit_flexl(data, nbasis = 10, kmax = 10, lsp_poss = -5:15, trace = FALSE)
 }
 \arguments{
+\item{data}{A data frame, with columns c (identifying
+the individual subjects), x (the time) and y (the response).}
+
 \item{nbasis}{The number of spline basis functions.}
 
 \item{kmax}{The maximum number of functional principal components
@@ -16,9 +19,6 @@ to allow.}
 log(gamma), the log of the smoothing parameter.}
 
 \item{trace}{If TRUE, print out extra information.}
-
-\item{data.}{A data frame, with columns c (identifying
-the individual subjects), x (the time) and y (the response).}
 }
 \value{
 The fitted model.

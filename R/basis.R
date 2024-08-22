@@ -1,5 +1,7 @@
 find_orthogonal_spline_basis <- function(nbasis, x) {
-    interior_knots <- seq(min(x) - 0.01 * sd(x), max(x) + 0.01 * sd(x), length = nbasis - 2)
+    interior_knots <- seq(min(x) - 0.01 * stats::sd(x),
+                          max(x) + 0.01 * stats::sd(x),
+                          length = nbasis - 2)
     knots <- orthogonalsplinebasis::expand.knots(interior_knots)
     basis <- orthogonalsplinebasis::OrthogonalSplineBasis(knots)
     list(X = orthogonalsplinebasis::evaluate(basis, x = x),
@@ -8,8 +10,8 @@ find_orthogonal_spline_basis <- function(nbasis, x) {
          nbasis = nbasis)
 }
 
-#' if x outside knots, extrapolate constant at nearest knot point, rather than NA
-#' (which is the default in orthogonalsplinebasis:::evaluate.SplineBasis
+# if x outside knots, extrapolate constant at nearest knot point, rather than NA
+# (which is the default in orthogonalsplinebasis:::evaluate.SplineBasis
 evaluate_with_extrap <- function(object, x, deriv) {
     knots <- object@knots
     order <- object@order
