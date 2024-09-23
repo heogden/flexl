@@ -38,6 +38,10 @@ flexl can be installed by using
 devtools::install_github("heogden/flexl")
 ```
 
+On Windows, this does not currently work, so please follow [these
+instructions](https://github.com/heogden/flexl/issues/1#issue-2542522879)
+as a temporary workaround.
+
 ## Example
 
 For demonstration purposes, we use some simulated longitudinal data,
