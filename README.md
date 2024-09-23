@@ -45,9 +45,7 @@ as a temporary workaround.
 ## Example
 
 For demonstration purposes, we use some simulated longitudinal data,
-with 20 subjects and 10 observations per subject (see [Section 5.4 of
-the preprint](https://arxiv.org/pdf/2401.11827.pdf#subsection.5.4) for
-details of how the data are generated).
+with 20 subjects and 10 observations per subject
 
 ``` r
 library(flexl)
