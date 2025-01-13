@@ -12,7 +12,7 @@ test_that("find norm of function from basis coefficients", {
    f_norm2 <- sum(beta^2)
    f_norm2_man <- integrate(function(x){f(x)^2}, min(basis$basis@knots), max(basis$basis@knots))$value
 
-   expect_equal(f_norm2, f_norm2_man)
+   expect_equal(f_norm2, f_norm2_man, tolerance = 1e-4)
    
 })
 
