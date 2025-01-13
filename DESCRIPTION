@@ -19,6 +19,7 @@ Imports:
     pracma,
     Rcpp,
     RcppEigen,
+    RcppParallel,
     tidyr
 Suggests:
     ALA,
