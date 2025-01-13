@@ -22,7 +22,6 @@ Imports:
     RcppParallel,
     tidyr
 Suggests:
-    ALA,
     lme4,
     numDeriv,
     refund,
