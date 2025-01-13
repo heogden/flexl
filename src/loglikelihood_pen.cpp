@@ -99,10 +99,10 @@ struct cluster {
 struct loglikp_func {
   // members
   const size_t n_B;
-  const size_t K;
   std::vector<cluster> clusters;
   double sp;
   Eigen::MatrixXd S;
+  const size_t K;
 
   // constructor
   loglikp_func(Eigen::MatrixXd& X, Eigen::VectorXd& y, std::vector<int>& c, double sp_, Eigen::MatrixXd& S_, size_t K_): n_B(X.cols()), sp(sp_), S(S_), K(K_) {
