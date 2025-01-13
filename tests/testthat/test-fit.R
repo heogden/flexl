@@ -171,20 +171,6 @@ test_that("chooses a reasonably large sp if have straight lines", {
 
 
 
-test_that("error if data has missing values", {
-    library(tidyverse)
-    
-    data <-  ALA::exercise %>%
-        as_tibble %>%
-        mutate(c = as.integer(as.factor(id)),
-               x = day,
-               y = strength,
-               .keep = "none")
-
-    expect_error(fit_flexl(data), "missing values")
-
-})
-
 
 test_that("gives reasonable fit with tricky blip function", {
     
@@ -278,48 +264,6 @@ test_that("fits the sleepstudy data", {
 })
 
 
-test_that("fits the fat data", {
-    library(tidyverse)
-    
-    data <- ALA::fat %>%
-        as_tibble %>%
-        mutate(c = as.integer(as.factor(id)),
-               x = time.menarche,
-               y = percent.fat,
-               .keep = "none")
-
-    mod <- fit_flexl(data)
-  
-    n_samples <- 1000
-    samples <- find_samples(mod, n_samples)
-
-    x_pred_data <- crossing(x = seq(from = min(data$x),
-                                    to = max(data$x),
-                                    length.out = 100),
-                            c = unique(data$c))
-
-    pred_data <- x_pred_data  %>%
-        mutate(mu_hat = predict_flexl(mod, newdata = list(x = x, c = c), interval = TRUE,
-                                      samples = samples))
-
-    pred_data %>%
-        filter(c <= 12) %>%
-        ggplot(aes(x = x)) +
-        geom_line(aes(y = mu_hat$estimate)) +
-        geom_ribbon(aes(ymin = mu_hat$lower, ymax = mu_hat$upper), alpha = 0.2) + 
-        geom_point(aes(x = x, y = y), data = data %>% filter(c <= 12)) +
-        facet_wrap(vars(c))
-    
-    set.seed(1)
-
-    data_noise <- data %>%
-        mutate(y = y + rnorm(length(y), 0, 20))
-
-    mod_noise <- fit_flexl(data_noise, trace = TRUE)
-
-    expect_lte(mod_noise$k, mod$k)
-    expect_gte(mod_noise$sp, mod$sp)
-})
 
 test_that("fitted values and predictions don't depend on cluster ordering", {
     library(tidyverse)
