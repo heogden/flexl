@@ -1,6 +1,6 @@
 Package: flexl
 Title: Fit Flexible Models for Simple Longitudinal Data
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Helen", "Ogden", email = "heogden12@gmail.com",
                        role = c("aut", "cre"),
