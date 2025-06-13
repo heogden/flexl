@@ -120,11 +120,12 @@ struct loglikp_func {
     T sigma = stan::math::exp(log_sigma);
     T tau= 1 / (sigma * sigma);
 
-   
     Eigen::Matrix<T, Eigen::Dynamic, 1> beta_0 = theta.head(n_B);
-    Eigen::Matrix<T, Eigen::Dynamic, 1> alpha = theta.segment(n_B, K * (n_B - 1) + 1);
-    Eigen::Matrix<T, Eigen::Dynamic, 1> beta = find_beta(alpha, K, n_B);
 
+    // The correct number of alpha parameters is K * n_B - K * (K - 1) / 2
+    Eigen::Matrix<T, Eigen::Dynamic, 1> alpha = theta.segment(n_B, K * n_B - K * (K - 1) / 2);
+    Eigen::Matrix<T, Eigen::Dynamic, 1> beta = find_beta(alpha, K, n_B);
+    
     std::vector<T> l_contribs;
     
     for(auto it = clusters.begin(); it < clusters.end(); it++) {
