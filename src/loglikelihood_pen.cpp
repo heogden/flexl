@@ -31,14 +31,14 @@ template <typename T> struct HouseholderReduced {
   const T gamma;
   
   // constructor
-  HouseholderReduced(Eigen::Matrix<T, Eigen::Dynamic, 1>& alpha): n_rows(alpha.size()),
+  HouseholderReduced(const Eigen::Matrix<T, Eigen::Dynamic, 1>& alpha): n_rows(alpha.size()),
 								  u(find_u(alpha)),
 								  gamma(find_gamma(u))
   {
   }
 
   // multiply by a vector x
-  Eigen::Matrix<T, Eigen::Dynamic, 1> operator*(Eigen::Matrix<T, Eigen::Dynamic, 1>& x) {
+  Eigen::Matrix<T, Eigen::Dynamic, 1> operator*(const Eigen::Matrix<T, Eigen::Dynamic, 1>& x) {
     Eigen::Matrix<T, Eigen::Dynamic, 1> x_ext(x.size() + 1);
     x_ext << 0, x;
     T a = u.dot(x_ext);
@@ -49,12 +49,12 @@ template <typename T> struct HouseholderReduced {
 
 
 template <typename T>
-Eigen::Matrix<T, Eigen::Dynamic, 1> find_beta(Eigen::Matrix<T, Eigen::Dynamic, 1>& alpha,
+Eigen::Matrix<T, Eigen::Dynamic, 1> find_beta(const Eigen::Matrix<T, Eigen::Dynamic, 1>& alpha,
 					      size_t K, size_t n_B) {
   std::vector<HouseholderReduced<T> > Hstar_vec;
   Eigen::Matrix<T, Eigen::Dynamic, 1> beta(K * n_B);
   
-  for(int k = 0; k < K; ++k) {
+  for(size_t k = 0; k < K; ++k) {
     Eigen::Matrix<T, Eigen::Dynamic, 1> alpha_k = alpha.segment(k * n_B - k * (k-1) / 2, n_B - k);
     
     Eigen::Matrix<T, Eigen::Dynamic, 1> beta_k = alpha_k;
@@ -83,14 +83,13 @@ struct cluster {
     n_c = 0;
   }
 
-  void append(Eigen::VectorXd X_i, Eigen::VectorXd y_i, size_t n_B) {  
+  void append(const Eigen::RowVectorXd& X_i, double y_i, size_t n_B) {  
     n_c += 1;
 
     X_c.conservativeResize(n_c, n_B);
     X_c.row(n_c - 1) = X_i;
     y_c.conservativeResize(n_c, 1);
-    y_c.row(n_c - 1) = y_i;
-    
+    y_c(n_c - 1) = y_i;
   }
   
 };
@@ -108,12 +107,9 @@ struct loglikp_func {
   loglikp_func(Eigen::MatrixXd& X, Eigen::VectorXd& y, std::vector<int>& c, double sp_, Eigen::MatrixXd& S_, size_t K_): n_B(X.cols()), sp(sp_), S(S_), K(K_) {
     auto d = max_element(c.begin(), c.end());
     clusters.resize(*d + 1);
-    for(int i = 0; i < c.size(); ++i) {
+    for(size_t i = 0; i < c.size(); ++i) {
       int cluster_id = c[i];
-      cluster clust = clusters[cluster_id];
-      clust.append(X.row(i), y.row(i), n_B);
-      clusters[cluster_id] = clust;
-      //clusters[c[i]].append(X.row(i), y.row(i), n_B);
+      clusters[cluster_id].append(X.row(i), y(i), n_B);
     }
   }
 
@@ -141,7 +137,7 @@ struct loglikp_func {
     
       std::vector<Eigen::Matrix<T, Eigen::Dynamic, 1>> D;
     
-      for(int k = 0; k < K; ++k) {
+      for(size_t k = 0; k < K; ++k) {
 	Eigen::Matrix<T, Eigen::Dynamic, 1> beta_k = beta.segment(n_B * k, n_B);
 	Eigen::Matrix<T, Eigen::Dynamic, 1> f_k = clust.X_c * beta_k;
 	Eigen::Matrix<T, Eigen::Dynamic, 1> b_k = tau * f_k;
@@ -151,10 +147,16 @@ struct loglikp_func {
 	  b_k = b_k - d_j_f_k * d_j;
 	}
 	T a_k = 1 + b_k.dot(f_k);
+
+        // Numerical stability check for a_k
+        if (a_k <= 0) {
+          // Return -INFINITY for log-likelihood if a_k is not positive definite
+          return stan::math::negative_infinity();
+        }
+
 	Eigen::Matrix<T, Eigen::Dynamic, 1> d_k = b_k / stan::math::sqrt(a_k);
 	D.push_back(d_k);
 
-      
 	ldet_Sigma += log(a_k);
 	T d_k_z = d_k.dot(z);
 	Q -= d_k_z * d_k_z;
@@ -168,7 +170,7 @@ struct loglikp_func {
     T w_0 =  stan::math::quad_form(S, beta_0);
     w_contribs.push_back(w_0);
     
-    for(int k = 0; k < K; ++k) {
+    for(size_t k = 0; k < K; ++k) {
       Eigen::Matrix<T, Eigen::Dynamic, 1> beta_k = beta.segment(n_B * k, n_B);
       
       T w_k = stan::math::quad_form(S, beta_k);
